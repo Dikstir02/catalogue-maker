@@ -1,0 +1,26 @@
+{
+  "name": "ExportLog",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string",
+      "description": "Username who exported"
+    },
+    "exported_at": {
+      "type": "string",
+      "description": "ISO timestamp of export"
+    },
+    "product_count": {
+      "type": "number",
+      "description": "Number of products exported"
+    },
+    "columns": {
+      "type": "string",
+      "description": "Columns included in export"
+    }
+  },
+  "required": [
+    "username",
+    "exported_at"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "AppUser",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string",
+      "description": "Login username"
+    },
+    "password": {
+      "type": "string",
+      "description": "Password (stored as plain for this app)"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "manager",
+        "exporter",
+        "user"
+      ],
+      "default": "user",
+      "description": "User role: admin=full access, manager=products only, exporter=export only, user=view only"
+    }
+  },
+  "required": [
+    "username",
+    "password",
+    "role"
+  ]
+}

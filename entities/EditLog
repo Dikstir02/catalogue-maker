@@ -1,0 +1,41 @@
+{
+  "name": "EditLog",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string",
+      "description": "User who made the edit"
+    },
+    "product_sku": {
+      "type": "string",
+      "description": "SKU of the edited product"
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Name of the edited product"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "edit",
+        "batch_edit",
+        "create",
+        "delete"
+      ],
+      "description": "Type of action"
+    },
+    "changes": {
+      "type": "string",
+      "description": "JSON string of before/after changes"
+    },
+    "edited_at": {
+      "type": "string",
+      "description": "ISO timestamp of edit"
+    }
+  },
+  "required": [
+    "username",
+    "action",
+    "edited_at"
+  ]
+}

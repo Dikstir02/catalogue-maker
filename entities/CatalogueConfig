@@ -1,0 +1,18 @@
+{
+  "name": "CatalogueConfig",
+  "type": "object",
+  "properties": {
+    "config_key": {
+      "type": "string",
+      "description": "Key for this config entry, e.g. 'brands' or 'categories'"
+    },
+    "values": {
+      "type": "string",
+      "description": "JSON array of values as a string"
+    }
+  },
+  "required": [
+    "config_key",
+    "values"
+  ]
+}

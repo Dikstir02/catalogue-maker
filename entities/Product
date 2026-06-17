@@ -1,0 +1,41 @@
+{
+  "name": "Product",
+  "type": "object",
+  "properties": {
+    "sku": {
+      "type": "string",
+      "description": "Product SKU identifier"
+    },
+    "brand": {
+      "type": "string",
+      "description": "Brand name"
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "sub_name": {
+      "type": "string",
+      "description": "Product sub-name / variant description (not shown in table)"
+    },
+    "category": {
+      "type": "string",
+      "description": "Product category"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "URL of the product image"
+    },
+    "stock": {
+      "type": "number",
+      "default": 0,
+      "description": "Stock quantity"
+    }
+  },
+  "required": [
+    "sku",
+    "brand",
+    "product_name",
+    "category"
+  ]
+}
