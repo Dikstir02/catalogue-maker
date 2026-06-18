@@ -172,7 +172,7 @@ function CatalogueApp({ appUser, onLogout }) {
 
   const filtered = useMemo(() => {
     const raw = search.trim();
-    const isMultiSku = /[,;]/.test(raw);
+    const isMultiSku = /[,;\s]/.test(raw);
     let list;
     if (isMultiSku) {
       const skus = raw.split(/[,;\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean);
