@@ -18,6 +18,10 @@
       "type": "string",
       "description": "Product sub-name / variant description (not shown in table)"
     },
+    "description": {
+      "type": "string",
+      "description": "Product description text (not shown in table)"
+    },
     "category": {
       "type": "string",
       "description": "Product category"

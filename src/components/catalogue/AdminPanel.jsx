@@ -31,7 +31,7 @@ const DEFAULT_CATEGORIES = ["Ashtray", "Case", "Cutter", "Humidor", "Lighter", "
 export default function AdminPanel({ open, onOpenChange, currentUser, onPasswordChanged }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-card border-border/30 max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-card border-border/30 max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-foreground">Admin Panel</DialogTitle>
         </DialogHeader>
