@@ -43,13 +43,39 @@ class ApiClient {
 
   // Auth
   async login(username, password) {
-    const data = await this.request('/auth/login', {
+    // Ensure we always send valid JSON; some callers may pass non-string values.
+    const payload = {
+      username: String(username ?? '').trim(),
+      password: String(password ?? ''),
+    };
+
+    const url = `${API_BASE}/auth/login`;
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    // NOTE: /auth/login does not require Authorization.
+    const response = await fetch(url, {
       method: 'POST',
-      body: JSON.stringify({ username, password }),
+      headers,
+      body: JSON.stringify(payload),
     });
-    if (data.success) {
-      this.setToken('demo-token');
+
+    if (!response.ok) {
+      // Backend may return HTML (e.g. Express Bad Request page). Handle non-JSON safely.
+      const text = await response.text().catch(() => '');
+      try {
+        const errorJson = JSON.parse(text);
+        throw new Error(errorJson.message || `HTTP ${response.status}`);
+      } catch {
+        throw new Error(text?.includes('Invalid credentials')
+          ? 'Invalid credentials'
+          : `HTTP ${response.status} ${response.statusText || ''}`.trim());
+      }
     }
+
+    const data = await response.json();
+    if (data?.success) this.setToken('demo-token');
     return data;
   }
 
