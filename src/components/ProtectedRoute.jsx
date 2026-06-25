@@ -10,13 +10,21 @@ const DefaultFallback = () => (
 );
 
 export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthenticatedElement }) {
+  // Temporary override: disable auth gating so the app works even if login wiring is broken.
+  // Enable/disable via VITE_AUTH_BYPASS=true
+  const authBypass = import.meta.env.VITE_AUTH_BYPASS === 'true';
+
   const { isAuthenticated, isLoadingAuth, authChecked, authError, checkUserAuth } = useAuth();
 
   useEffect(() => {
-    if (!authChecked && !isLoadingAuth) {
+    if (!authBypass && !authChecked && !isLoadingAuth) {
       checkUserAuth();
     }
-  }, [authChecked, isLoadingAuth, checkUserAuth]);
+  }, [authBypass, authChecked, isLoadingAuth, checkUserAuth]);
+
+  if (authBypass) {
+    return <Outlet />;
+  }
 
   if (isLoadingAuth || !authChecked) {
     return fallback;
