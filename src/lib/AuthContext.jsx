@@ -25,18 +25,23 @@ export const AuthProvider = ({ children }) => {
       
       // First, check app public settings (with token if available)
       // This will tell us if auth is required, user not registered, etc.
-      const appClient = createAxiosClient({
-        baseURL: `/api/apps/public`,
-        headers: {
-          'X-App-Id': appParams.appId
-        },
-        token: appParams.token, // Include token if available
-        interceptResponses: true
-      });
-      
+      // createAxiosClient is not available in this build; use fetch instead.
       try {
-        const publicSettings = await appClient.get(`/prod/public-settings/by-id/${appParams.appId}`);
+        const res = await fetch(`/api/apps/public/prod/public-settings/by-id/${appParams.appId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-App-Id': appParams.appId,
+            ...(appParams.token ? { Authorization: `Bearer ${appParams.token}` } : {}),
+          },
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw { status: res.status, data: err, message: err?.message || 'Request failed' };
+        }
+        const publicSettings = await res.json();
         setAppPublicSettings(publicSettings);
+
         
         // If we got the app public settings successfully, check if user is authenticated
         if (appParams.token) {
