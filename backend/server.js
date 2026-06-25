@@ -47,10 +47,11 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS catalogue_configs (
     id TEXT PRIMARY KEY,
     config_key TEXT UNIQUE NOT NULL,
-    values TEXT,
+    config_values TEXT,
     created_date TEXT
   )
 `);
+
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS edit_logs (
@@ -85,8 +86,10 @@ const defaultConfigs = [
   { id: 'config_categories', config_key: 'categories', values: JSON.stringify(['Ashtray', 'Case', 'Cutter', 'Humidor', 'Lighter', 'Pen', 'Others', 'Set']), created_date: new Date().toISOString() }
 ];
 
+
 const insertUser = db.prepare('INSERT OR IGNORE INTO app_users (id, username, password, role, created_date) VALUES (?, ?, ?, ?, ?)');
-const insertConfig = db.prepare('INSERT OR IGNORE INTO catalogue_configs (id, config_key, values, created_date) VALUES (?, ?, ?, ?)');
+const insertConfig = db.prepare('INSERT OR IGNORE INTO catalogue_configs (id, config_key, config_values, created_date) VALUES (?, ?, ?, ?)');
+
 
 const insertManyUsers = db.transaction((users) => {
   for (const user of users) {
@@ -100,8 +103,14 @@ const insertManyConfigs = db.transaction((configs) => {
   }
 });
 
-insertManyUsers(defaultUsers);
-insertManyConfigs(defaultConfigs);
+// Seed defaults. Guarded to prevent Render startup failure due to any single bad row.
+try {
+  insertManyUsers(defaultUsers);
+  insertManyConfigs(defaultConfigs);
+} catch (e) {
+  console.error('SQLite default seed failed:', e?.message || e);
+}
+
 
 // Helper functions
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
@@ -239,10 +248,11 @@ app.get('/api/configs', (req, res) => {
 
 app.put('/api/configs/:id', (req, res) => {
   const config = req.body;
-  db.prepare(`
-    UPDATE catalogue_configs SET config_key = ?, values = ?
+db.prepare(`
+    UPDATE catalogue_configs SET config_key = ?, config_values = ?
     WHERE id = ?
   `).run(config.config_key, config.values, req.params.id);
+
   
   res.json({ ...config, id: req.params.id });
 });
