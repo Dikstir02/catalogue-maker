@@ -24,7 +24,8 @@ import LogoutDialog from "@/components/catalogue/LogoutDialog";
 import PdfCatalogueExport from "@/components/catalogue/PdfCatalogueExport";
 import AppLogin from "@/pages/AppLogin";
 import { getAppUser, setAppUser, clearAppUser } from "@/lib/auth";
-import { Package } from "lucide-react";
+import { Package, Download } from "lucide-react";
+import ImportBackedUpDataDialog from "@/components/ImportBackedUpDataDialog";
 
 const DEFAULT_BRANDS = ["DUPONT", "ELIE BLEU", "LFL", "MORICI", "RECIFE", "SIGLO", "VINBRO", "XIKAR"];
 const DEFAULT_CATEGORIES = ["Ashtray", "Case", "Cutter", "Humidor", "Lighter", "Pen", "Others", "Set"];
@@ -118,6 +119,7 @@ function CatalogueApp({ appUser, onLogout }) {
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showBackupImport, setShowBackupImport] = useState(false);
   const [showBulkImage, setShowBulkImage] = useState(false);
   const [showUpdateStocks, setShowUpdateStocks] = useState(false);
   const [showBatchDelete, setShowBatchDelete] = useState(false);
@@ -355,6 +357,19 @@ function CatalogueApp({ appUser, onLogout }) {
                 </Button>
               )}
 
+              {/* Non-admins: external button to import backup JSON */}
+              {!isAdmin && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setShowBackupImport(true)}
+                  className="h-9 text-sm gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Import Backup
+                </Button>
+              )}
+
               <Button size="sm" variant="ghost" onClick={() => setShowLogout(true)} className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground">
                 <LogOut className="w-4 h-4" />
               </Button>
@@ -432,6 +447,7 @@ function CatalogueApp({ appUser, onLogout }) {
       <BulkImageUpdateModal open={showBulkImage} onOpenChange={setShowBulkImage} products={products} onUpdated={() => qc.invalidateQueries({ queryKey: ["products"] })} />
       <UpdateStocksModal open={showUpdateStocks} onOpenChange={setShowUpdateStocks} existingProducts={products} onUpdated={() => qc.invalidateQueries({ queryKey: ["products"] })} />
       <MissingItemsModal open={showMissing} onOpenChange={setShowMissing} products={products} allBrands={allBrands} allCategories={allCategories} onUpdated={() => qc.invalidateQueries({ queryKey: ["products"] })} />
+      <ImportBackedUpDataDialog open={showBackupImport} onOpenChange={setShowBackupImport} />
       <LogoutDialog open={showLogout} onOpenChange={setShowLogout} onConfirm={onLogout} />
     </div>
   );
