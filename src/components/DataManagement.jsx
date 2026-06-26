@@ -254,7 +254,8 @@ export default function DataManagement() {
 
           <div className="p-4 border rounded-lg">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold">Cloud Sync (GitHub Gist)</h3>
+            <h3 className="font-semibold">Cloud Sync (GitHub Repo File)</h3>
+
               {syncStatus.isConfigured ? (
                 <Cloud className="w-4 h-4 text-green-500" />
               ) : (

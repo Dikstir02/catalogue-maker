@@ -417,12 +417,20 @@ class ApiClient {
     const apiBase = 'https://api.github.com';
     const url = `${apiBase}/repos/${owner}/${repo}/contents/${encodeURIComponent(filePath)}?ref=${encodeURIComponent(branch)}`;
 
+    const response = await fetch(url, {
+      headers: {
+        ...(token ? { Authorization: `token ${token}` } : {}),
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
     if (!response.ok) {
       const error = await response.json().catch(() => null);
       throw new Error(error?.message || 'Failed to sync from GitHub repo file');
     }
 
     const file = await response.json();
+
     const decoded = atob((file.content || '').replace(/\n/g, ''));
     const data = JSON.parse(decoded);
 
