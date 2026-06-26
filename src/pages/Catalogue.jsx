@@ -130,6 +130,7 @@ function CatalogueApp({ appUser, onLogout }) {
   const [showPdfExport, setShowPdfExport] = useState(false);
   const [batchProgress, setBatchProgress] = useState(null);
   const [deleteProgress, setDeleteProgress] = useState(null);
+  const [showTable, setShowTable] = useState(false);
 
   const [search, setSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -382,16 +383,29 @@ function CatalogueApp({ appUser, onLogout }) {
 
         <div className="border-b border-border/20 bg-background/60 backdrop-blur-sm px-6 py-4">
           <div className="max-w-7xl mx-auto space-y-3">
-            <ProductFilters
-              search={search}
-              onSearchChange={setSearch}
-              categories={selectedCategories}
-              onCategoriesChange={setSelectedCategories}
-              brands={selectedBrands}
-              onBrandsChange={setSelectedBrands}
-              allBrands={allBrands}
-              allCategories={allCategories}
-            />
+            <div className="flex gap-2 items-start">
+              <div className="flex-1">
+                <ProductFilters
+                  search={search}
+                  onSearchChange={setSearch}
+                  categories={selectedCategories}
+                  onCategoriesChange={setSelectedCategories}
+                  brands={selectedBrands}
+                  onBrandsChange={setSelectedBrands}
+                  allBrands={allBrands}
+                  allCategories={allCategories}
+                />
+              </div>
+              {isUser && (
+                <Button
+                  size="sm"
+                  onClick={() => setShowTable(true)}
+                  className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium h-9 text-sm flex-shrink-0 mt-1"
+                >
+                  <Package className="w-4 h-4" /> Search
+                </Button>
+              )}
+            </div>
             <AnimatePresence>
               {showForm && canManageProducts && (
                 <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.2 }}>
@@ -410,18 +424,44 @@ function CatalogueApp({ appUser, onLogout }) {
               <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" />
             </div>
           ) : (
-            <ProductTable
-              products={filtered}
-              onEdit={setEditProduct}
-              onDelete={handleDelete}
-              isAdmin={canManageProducts}
-              selectedIds={selectedIds}
-              onSelect={handleSelect}
-              onSelectAll={handleSelectAll}
-              sortField={sortField}
-              sortDir={sortDir}
-              onSort={handleSort}
-            />
+            <AnimatePresence mode="wait">
+              {(!isUser || showTable) && (
+                <motion.div
+                  key="table"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ProductTable
+                    products={filtered}
+                    onEdit={setEditProduct}
+                    onDelete={handleDelete}
+                    isAdmin={canManageProducts}
+                    selectedIds={selectedIds}
+                    onSelect={handleSelect}
+                    onSelectAll={handleSelectAll}
+                    sortField={sortField}
+                    sortDir={sortDir}
+                    onSort={handleSort}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
+          {isUser && !showTable && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col items-center justify-center py-20 text-center"
+            >
+              <Package className="w-16 h-16 text-muted-foreground/30 mb-4" />
+              <p className="text-lg text-muted-foreground mb-2">Browse the Catalogue</p>
+              <p className="text-sm text-muted-foreground/60 max-w-md">
+                Use the search bar and filters above to find products, then click <strong>Search</strong> to view results.
+              </p>
+            </motion.div>
           )}
         </div>
       </div>
