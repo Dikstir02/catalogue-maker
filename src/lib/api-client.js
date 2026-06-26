@@ -328,8 +328,17 @@ class ApiClient {
     return { success: true, message: 'Data exported successfully' };
   }
 
-  // Sync data to GitHub Gist
-  async syncToGist(gistId, token) {
+  // --------- GitHub repo file sync (replaces Gist) ---------
+  // Stores JSON backup in a single file within a GitHub repository.
+  // Repo params are kept in localStorage after enabling sync.
+
+  // Expected localStorage keys:
+  // - github_repo_owner (e.g. "myuser")
+  // - github_repo_name  (e.g. "catalogue-maker")
+  // - github_branch     (default: "master")
+  // - github_file_path  (default: "data/catalogue-data.json")
+
+  async syncToRepoFile({ owner, repo, branch = 'master', filePath = 'data/catalogue-data.json', token }) {
     const data = {
       products: this.getProductsFromStorage(),
       users: this.getUsersFromStorage(),
@@ -341,70 +350,86 @@ class ApiClient {
     };
 
     const content = btoa(JSON.stringify(data, null, 2));
-    
-    const gistData = {
-      description: 'Catalogue Maker Data Sync',
-      files: {
-        'catalogue-data.json': {
-          content: content
-        }
-      }
-    };
 
-    const method = gistId ? 'PATCH' : 'POST';
-    const url = gistId 
-      ? `https://api.github.com/gists/${gistId}`
-      : 'https://api.github.com/gists';
+    const apiBase = 'https://api.github.com';
+    const url = `${apiBase}/repos/${owner}/${repo}/contents/${encodeURIComponent(filePath)}?ref=${encodeURIComponent(branch)}`;
 
-    const response = await fetch(url, {
-      method: method,
-      headers: {
-        'Authorization': `token ${token}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(gistData)
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to sync to GitHub Gist');
-    }
-
-    const result = await response.json();
-    
-    // Save gist ID and token for future syncs
-    localStorage.setItem('gist_id', result.id);
-    localStorage.setItem('gist_token', token);
-
-    return { 
-      success: true, 
-      gistId: result.id,
-      message: 'Data synced to GitHub Gist successfully'
-    };
-  }
-
-  // Sync data from GitHub Gist
-  async syncFromGist(gistId, token, skipConfirmation = false) {
-    const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+    // Check existing file to include SHA when updating
+    let sha = null;
+    const getResp = await fetch(url, {
       headers: {
         'Authorization': `token ${token}`,
         'Accept': 'application/vnd.github.v3+json'
       }
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to sync from GitHub Gist');
+    if (getResp.ok) {
+      const existing = await getResp.json();
+      sha = existing.sha;
     }
 
-    const gist = await response.json();
-    const fileContent = gist.files['catalogue-data.json'].content;
-    const data = JSON.parse(atob(fileContent));
+    const putPayload = {
+      message: 'Catalogue Maker: sync data',
+      content: content,
+      branch,
+    };
+    if (sha) putPayload.sha = sha;
+
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(putPayload)
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.message || 'Failed to sync to GitHub repo file');
+    }
+
+    const result = await response.json();
+
+    localStorage.setItem('github_repo_owner', owner);
+    localStorage.setItem('github_repo_name', repo);
+    localStorage.setItem('github_branch', branch);
+    localStorage.setItem('github_file_path', filePath);
+    localStorage.setItem('github_repo_token', token);
+
+    return {
+      success: true,
+      message: 'Data synced to GitHub repo file successfully',
+      commit: result?.commit?.sha || null
+    };
+  }
+
+  // Sync data from GitHub repo file
+  async syncFromGist(_ignoredGistId, token, skipConfirmation = false) {
+    const owner = localStorage.getItem('github_repo_owner');
+    const repo = localStorage.getItem('github_repo_name');
+    const branch = localStorage.getItem('github_branch') || 'master';
+    const filePath = localStorage.getItem('github_file_path') || 'data/catalogue-data.json';
+
+    if (!owner || !repo) throw new Error('Repo owner/name not configured.');
+
+    const apiBase = 'https://api.github.com';
+    const url = `${apiBase}/repos/${owner}/${repo}/contents/${encodeURIComponent(filePath)}?ref=${encodeURIComponent(branch)}`;
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.message || 'Failed to sync from GitHub repo file');
+    }
+
+    const file = await response.json();
+    const decoded = atob((file.content || '').replace(/\n/g, ''));
+    const data = JSON.parse(decoded);
+
 
     // Validate data structure
     if (!data.products || !Array.isArray(data.products)) {
-      throw new Error('Invalid data in Gist');
+      throw new Error('Invalid data in repo file');
     }
 
     // Confirm import (skip for auto-sync)
@@ -442,24 +467,30 @@ class ApiClient {
 
   // Get sync status
   getSyncStatus() {
-    const gistId = localStorage.getItem('gist_id');
-    const token = localStorage.getItem('gist_token');
+    const owner = localStorage.getItem('github_repo_owner');
+    const repo = localStorage.getItem('github_repo_name');
+    const token = localStorage.getItem('github_repo_token');
     const lastSync = localStorage.getItem('last_sync');
-    
+
     return {
-      isConfigured: !!(gistId && token),
-      gistId: gistId,
+      isConfigured: !!(owner && repo && token),
+      // keep gistId field for backward compatibility with current UI
+      gistId: null,
       lastSync: lastSync
     };
   }
 
   // Clear sync configuration
   clearSync() {
-    localStorage.removeItem('gist_id');
-    localStorage.removeItem('gist_token');
+    localStorage.removeItem('github_repo_owner');
+    localStorage.removeItem('github_repo_name');
+    localStorage.removeItem('github_branch');
+    localStorage.removeItem('github_file_path');
+    localStorage.removeItem('github_repo_token');
     localStorage.removeItem('last_sync');
     localStorage.removeItem('auto_sync_enabled');
   }
+
 
   // Enable auto sync
   enableAutoSync() {
@@ -470,6 +501,7 @@ class ApiClient {
   disableAutoSync() {
     localStorage.removeItem('auto_sync_enabled');
   }
+
 
   // Check if auto sync is enabled
   isAutoSyncEnabled() {

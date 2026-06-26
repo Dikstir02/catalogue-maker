@@ -15,8 +15,14 @@ export default function DataManagement() {
   const [message, setMessage] = useState(null);
   const [messageType, setMessageType] = useState(null);
   const [gistToken, setGistToken] = useState('');
+  const [repoOwner, setRepoOwner] = useState('');
+  const [repoName, setRepoName] = useState('');
+  const [branch, setBranch] = useState('master');
+  const [filePath, setFilePath] = useState('data/catalogue-data.json');
+
   const [syncStatus, setSyncStatus] = useState(apiClient.getSyncStatus());
   const [autoSync, setAutoSync] = useState(apiClient.isAutoSyncEnabled());
+
   const [countdown, setCountdown] = useState(10);
   const queryClient = useQueryClient();
 
@@ -59,7 +65,8 @@ export default function DataManagement() {
 
   const handleSyncToGist = async () => {
     // Use stored token if input is empty
-    const tokenToUse = gistToken || localStorage.getItem('gist_token');
+    const tokenToUse = gistToken || localStorage.getItem('github_repo_token');
+
     
     if (!tokenToUse) {
       setMessage({ text: 'Please enter a GitHub Personal Access Token', type: 'error' });
@@ -161,7 +168,8 @@ export default function DataManagement() {
 
     const interval = setInterval(async () => {
       try {
-        const token = localStorage.getItem('gist_token');
+        const token = localStorage.getItem('github_repo_token');
+
         
         // First, sync from cloud (pull latest changes) - skip confirmation for auto-sync
         await apiClient.syncFromGist(syncStatus.gistId, token, true);
@@ -271,7 +279,7 @@ export default function DataManagement() {
             )}
 
             {!syncStatus.isConfigured ? (
-              <div className="space-y-3">
+            <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="gist-token" className="text-xs text-muted-foreground">
                     GitHub Personal Access Token
@@ -285,11 +293,71 @@ export default function DataManagement() {
                     className="bg-background/50 border-border/50 h-9 text-sm"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Create a token at: github.com/settings/tokens (enable gist scope)
+                    Create a token at: github.com/settings/tokens (enable repo scope for writing files)
                   </p>
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="repo-owner" className="text-xs text-muted-foreground">
+                      Repo Owner
+                    </Label>
+                    <Input
+                      id="repo-owner"
+                      value={repoOwner}
+                      onChange={(e) => setRepoOwner(e.target.value)}
+                      placeholder="myuser"
+                      className="bg-background/50 border-border/50 h-9 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="repo-name" className="text-xs text-muted-foreground">
+                      Repo Name
+                    </Label>
+                    <Input
+                      id="repo-name"
+                      value={repoName}
+                      onChange={(e) => setRepoName(e.target.value)}
+                      placeholder="catalogue-maker"
+                      className="bg-background/50 border-border/50 h-9 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="repo-branch" className="text-xs text-muted-foreground">
+                    Branch
+                  </Label>
+                  <Input
+                    id="repo-branch"
+                    value={branch}
+                    onChange={(e) => setBranch(e.target.value)}
+                    placeholder="master"
+                    className="bg-background/50 border-border/50 h-9 text-sm"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="repo-file" className="text-xs text-muted-foreground">
+                    File Path in Repo
+                  </Label>
+                  <Input
+                    id="repo-file"
+                    value={filePath}
+                    onChange={(e) => setFilePath(e.target.value)}
+                    placeholder="data/catalogue-data.json"
+                    className="bg-background/50 border-border/50 h-9 text-sm"
+                  />
+                </div>
+
                 <Button
-                  onClick={handleSyncToGist}
+                  onClick={() => {
+                    localStorage.setItem('github_repo_owner', repoOwner);
+                    localStorage.setItem('github_repo_name', repoName);
+                    localStorage.setItem('github_branch', branch);
+                    localStorage.setItem('github_file_path', filePath);
+                    handleSyncToGist();
+                  }}
                   disabled={syncing}
                   className="w-full sm:w-auto"
                 >
@@ -300,6 +368,7 @@ export default function DataManagement() {
                   After enabling, you can turn on auto-sync to automatically sync every 10 seconds
                 </p>
               </div>
+
             ) : (
               <div className="space-y-3">
                 <div className="flex gap-2">
