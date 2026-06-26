@@ -2,13 +2,18 @@ import React, { useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Upload, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Download, Upload, AlertTriangle, CheckCircle, Cloud, CloudOff, RefreshCw } from 'lucide-react';
 
 export default function DataManagement() {
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState(null);
   const [messageType, setMessageType] = useState(null);
+  const [gistToken, setGistToken] = useState('');
+  const [syncStatus, setSyncStatus] = useState(apiClient.getSyncStatus());
 
   const handleExport = async () => {
     setExporting(true);
@@ -44,6 +49,64 @@ export default function DataManagement() {
     } finally {
       setImporting(false);
       setTimeout(() => setMessage(null), 5000);
+    }
+  };
+
+  const handleSyncToGist = async () => {
+    if (!gistToken) {
+      setMessage({ text: 'Please enter a GitHub Personal Access Token', type: 'error' });
+      setMessageType('error');
+      return;
+    }
+
+    setSyncing(true);
+    setMessage(null);
+
+    try {
+      const result = await apiClient.syncToGist(syncStatus.gistId || null, gistToken);
+      setMessage({ text: result.message, type: 'success' });
+      setMessageType('success');
+      setSyncStatus(apiClient.getSyncStatus());
+      setGistToken('');
+    } catch (error) {
+      setMessage({ text: 'Sync failed: ' + error.message, type: 'error' });
+      setMessageType('error');
+    } finally {
+      setSyncing(false);
+      setTimeout(() => setMessage(null), 5000);
+    }
+  };
+
+  const handleSyncFromGist = async () => {
+    if (!syncStatus.isConfigured) {
+      setMessage({ text: 'Please configure sync first by syncing to a Gist', type: 'error' });
+      setMessageType('error');
+      return;
+    }
+
+    setSyncing(true);
+    setMessage(null);
+
+    try {
+      const result = await apiClient.syncFromGist(syncStatus.gistId, localStorage.getItem('gist_token'));
+      setMessage({ text: result.message, type: 'success' });
+      setMessageType('success');
+    } catch (error) {
+      setMessage({ text: 'Sync failed: ' + error.message, type: 'error' });
+      setMessageType('error');
+    } finally {
+      setSyncing(false);
+      setTimeout(() => setMessage(null), 5000);
+    }
+  };
+
+  const handleClearSync = () => {
+    if (confirm('Are you sure you want to clear sync configuration?')) {
+      apiClient.clearSync();
+      setSyncStatus(apiClient.getSyncStatus());
+      setMessage({ text: 'Sync configuration cleared', type: 'success' });
+      setMessageType('success');
+      setTimeout(() => setMessage(null), 3000);
     }
   };
 
@@ -107,6 +170,85 @@ export default function DataManagement() {
               <p className="text-sm text-muted-foreground mt-2">Importing...</p>
             )}
           </div>
+
+          <div className="p-4 border rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold">Cloud Sync (GitHub Gist)</h3>
+              {syncStatus.isConfigured ? (
+                <Cloud className="w-4 h-4 text-green-500" />
+              ) : (
+                <CloudOff className="w-4 h-4 text-muted-foreground" />
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Sync your data across all browsers using GitHub Gist.
+              {syncStatus.isConfigured && (
+                <span className="block mt-1 text-xs">
+                  Last sync: {syncStatus.lastSync ? new Date(syncStatus.lastSync).toLocaleString() : 'Never'}
+                </span>
+              )}
+            </p>
+
+            {!syncStatus.isConfigured ? (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="gist-token" className="text-xs text-muted-foreground">
+                    GitHub Personal Access Token
+                  </Label>
+                  <Input
+                    id="gist-token"
+                    type="password"
+                    placeholder="ghp_xxxxxxxxxxxx"
+                    value={gistToken}
+                    onChange={(e) => setGistToken(e.target.value)}
+                    className="bg-background/50 border-border/50 h-9 text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Create a token at: github.com/settings/tokens (enable gist scope)
+                  </p>
+                </div>
+                <Button
+                  onClick={handleSyncToGist}
+                  disabled={syncing}
+                  className="w-full sm:w-auto"
+                >
+                  <Cloud className="w-4 h-4 mr-2" />
+                  {syncing ? 'Syncing...' : 'Enable Cloud Sync'}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSyncFromGist}
+                    disabled={syncing}
+                    variant="secondary"
+                    className="flex-1"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    {syncing ? 'Syncing...' : 'Sync from Cloud'}
+                  </Button>
+                  <Button
+                    onClick={handleSyncToGist}
+                    disabled={syncing}
+                    variant="secondary"
+                    className="flex-1"
+                  >
+                    <Cloud className="w-4 h-4 mr-2" />
+                    {syncing ? 'Syncing...' : 'Sync to Cloud'}
+                  </Button>
+                </div>
+                <Button
+                  onClick={handleClearSync}
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive hover:text-destructive"
+                >
+                  Disable Cloud Sync
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="p-4 bg-muted/50 rounded-lg">
@@ -116,6 +258,7 @@ export default function DataManagement() {
             <li><strong>Transfer:</strong> Copy the JSON file to your other device/browser</li>
             <li><strong>Import:</strong> Click "Import Data" and select the JSON file</li>
             <li><strong>Refresh:</strong> After import, refresh the page to see your data</li>
+            <li><strong>Cloud Sync:</strong> Use GitHub Gist to sync data across all browsers automatically</li>
           </ol>
         </div>
       </CardContent>

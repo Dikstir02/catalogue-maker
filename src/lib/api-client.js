@@ -328,6 +328,136 @@ class ApiClient {
     return { success: true, message: 'Data exported successfully' };
   }
 
+  // Sync data to GitHub Gist
+  async syncToGist(gistId, token) {
+    const data = {
+      products: this.getProductsFromStorage(),
+      users: this.getUsersFromStorage(),
+      configs: this.getConfigsFromStorage(),
+      edit_logs: this.getEditLogsFromStorage(),
+      export_logs: this.getExportLogsFromStorage(),
+      exportDate: new Date().toISOString(),
+      version: '1.0'
+    };
+
+    const content = btoa(JSON.stringify(data, null, 2));
+    
+    const gistData = {
+      description: 'Catalogue Maker Data Sync',
+      files: {
+        'catalogue-data.json': {
+          content: content
+        }
+      }
+    };
+
+    const method = gistId ? 'PATCH' : 'POST';
+    const url = gistId 
+      ? `https://api.github.com/gists/${gistId}`
+      : 'https://api.github.com/gists';
+
+    const response = await fetch(url, {
+      method: method,
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(gistData)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to sync to GitHub Gist');
+    }
+
+    const result = await response.json();
+    
+    // Save gist ID and token for future syncs
+    localStorage.setItem('gist_id', result.id);
+    localStorage.setItem('gist_token', token);
+
+    return { 
+      success: true, 
+      gistId: result.id,
+      message: 'Data synced to GitHub Gist successfully'
+    };
+  }
+
+  // Sync data from GitHub Gist
+  async syncFromGist(gistId, token) {
+    const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to sync from GitHub Gist');
+    }
+
+    const gist = await response.json();
+    const fileContent = gist.files['catalogue-data.json'].content;
+    const data = JSON.parse(atob(fileContent));
+
+    // Validate data structure
+    if (!data.products || !Array.isArray(data.products)) {
+      throw new Error('Invalid data in Gist');
+    }
+
+    // Confirm import
+    const confirmed = confirm(
+      `This will replace all your current data with data from the Gist.\n\n` +
+      `Products: ${data.products.length}\n` +
+      `Users: ${data.users?.length || 0}\n` +
+      `Last Sync: ${data.exportDate || 'Unknown'}\n\n` +
+      `Are you sure you want to continue?`
+    );
+
+    if (!confirmed) {
+      return { success: false, message: 'Sync cancelled' };
+    }
+
+    // Import data
+    if (data.products) this.saveProductsToStorage(data.products);
+    if (data.users) this.saveUsersToStorage(data.users);
+    if (data.configs) this.saveConfigsToStorage(data.configs);
+    if (data.edit_logs) this.saveEditLogsToStorage(data.edit_logs);
+    if (data.export_logs) this.saveExportLogsToStorage(data.export_logs);
+
+    return { 
+      success: true, 
+      message: 'Data synced from GitHub Gist successfully! Please refresh the page.',
+      data: {
+        products: data.products.length,
+        users: data.users?.length || 0,
+        configs: data.configs?.length || 0
+      }
+    };
+  }
+
+  // Get sync status
+  getSyncStatus() {
+    const gistId = localStorage.getItem('gist_id');
+    const token = localStorage.getItem('gist_token');
+    const lastSync = localStorage.getItem('last_sync');
+    
+    return {
+      isConfigured: !!(gistId && token),
+      gistId: gistId,
+      lastSync: lastSync
+    };
+  }
+
+  // Clear sync configuration
+  clearSync() {
+    localStorage.removeItem('gist_id');
+    localStorage.removeItem('gist_token');
+    localStorage.removeItem('last_sync');
+  }
+
   // Import data from JSON file
   async importAllData(file) {
     return new Promise((resolve, reject) => {
