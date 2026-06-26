@@ -303,7 +303,7 @@ class ApiClient {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }
 
-  // Export all data to JSON and store online (server-side)
+  // Export all data as a JSON file download (client-side)
   async exportAllData() {
     const data = {
       products: this.getProductsFromStorage(),
@@ -315,18 +315,18 @@ class ApiClient {
       version: '1.0'
     };
 
-    const resp = await fetch('/api/backup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
+    // Trigger file download
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `catalogue-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 
-    if (!resp.ok) {
-      const error = await resp.json().catch(() => null);
-      throw new Error(error?.message || 'Failed to store backup online');
-    }
-
-    return { success: true, message: 'Data exported successfully (stored online)' };
+    return { success: true, message: 'Data exported successfully! Check your downloads.' };
   }
 
   // Import data from online backup (replaces current local data)
