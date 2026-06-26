@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Github, CheckCircle, AlertTriangle, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Download, CheckCircle, AlertTriangle, Trash2 } from 'lucide-react';
+
+const CLIENT_ID = '471887550782-7khs7702s9tes4it48o1t7ftpgjaos29.apps.googleusercontent.com';
+const FOLDER_ID = '18LvVjQRUOdgPI_D34VK4-zOgT2pl2k51';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
 export default function DataManagement() {
   const [exporting, setExporting] = useState(false);
@@ -13,26 +15,63 @@ export default function DataManagement() {
   const [message, setMessage] = useState(null);
   const [messageType, setMessageType] = useState(null);
 
-  // GitHub config state
-  const [showConfig, setShowConfig] = useState(false);
-  const [ghToken, setGhToken] = useState('');
-  const [showToken, setShowToken] = useState(false);
-  const [ghOwner] = useState('Dikstir02');
-  const [ghRepo] = useState('catalogue-maker');
-  const [ghConfigured, setGhConfigured] = useState(false);
+  // Google Drive state
+  const [driveConfigured, setDriveConfigured] = useState(false);
   const [lastSync, setLastSync] = useState(null);
 
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('github_repo_token');
-    const storedLastSync = localStorage.getItem('last_sync');
-    if (storedToken) {
-      setGhToken(storedToken);
-      setGhConfigured(true);
-    }
-    if (storedLastSync) setLastSync(storedLastSync);
+    const token = localStorage.getItem('drive_access_token');
+    const ls = localStorage.getItem('last_sync');
+    if (token) setDriveConfigured(true);
+    if (ls) setLastSync(ls);
   }, []);
+
+  const handleGoogleSignIn = () => {
+    if (typeof google === 'undefined' || !google.accounts) {
+      setMessage({ text: 'Google Identity Services failed to load. Please refresh the page.', type: 'error' });
+      setMessageType('error');
+      return;
+    }
+
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: (response) => {
+        if (response.access_token) {
+          localStorage.setItem('drive_access_token', response.access_token);
+          localStorage.setItem('drive_folder_id', FOLDER_ID);
+          setDriveConfigured(true);
+          setMessage({ text: 'Google Drive connected successfully!', type: 'success' });
+          setMessageType('success');
+          setTimeout(() => setMessage(null), 5000);
+        } else {
+          setMessage({ text: 'Google sign-in failed.', type: 'error' });
+          setMessageType('error');
+          setTimeout(() => setMessage(null), 5000);
+        }
+      },
+      error_callback: (err) => {
+        setMessage({ text: 'Google sign-in error: ' + (err?.message || 'Unknown'), type: 'error' });
+        setMessageType('error');
+        setTimeout(() => setMessage(null), 5000);
+      }
+    });
+
+    client.requestAccessToken();
+  };
+
+  const handleDisconnect = () => {
+    localStorage.removeItem('drive_access_token');
+    localStorage.removeItem('drive_folder_id');
+    localStorage.removeItem('last_sync');
+    setDriveConfigured(false);
+    setLastSync(null);
+    setMessage({ text: 'Google Drive disconnected.', type: 'success' });
+    setMessageType('success');
+    setTimeout(() => setMessage(null), 5000);
+  };
 
   const handleExport = async () => {
     setExporting(true);
@@ -77,27 +116,6 @@ export default function DataManagement() {
     }
   };
 
-  const saveGitHubConfig = () => {
-    if (!ghToken.trim()) return;
-    localStorage.setItem('github_repo_owner', ghOwner);
-    localStorage.setItem('github_repo_name', ghRepo);
-    localStorage.setItem('github_repo_token', ghToken.trim());
-    setGhConfigured(true);
-    setMessage({ text: 'GitHub configuration saved! Export will now upload to the repo.', type: 'success' });
-    setMessageType('success');
-    setTimeout(() => setMessage(null), 5000);
-  };
-
-  const clearGitHubConfig = () => {
-    apiClient.clearSync();
-    setGhToken('');
-    setGhConfigured(false);
-    setLastSync(null);
-    setMessage({ text: 'GitHub configuration cleared.', type: 'success' });
-    setMessageType('success');
-    setTimeout(() => setMessage(null), 5000);
-  };
-
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
@@ -125,90 +143,45 @@ export default function DataManagement() {
           </div>
         )}
 
-        {/* GitHub Repo Backup Section */}
+        {/* Google Drive Backup Section */}
         <div className="p-4 border rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Github className="w-4 h-4" />
-              GitHub Repo Backup
-            </h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowConfig(!showConfig)}
-              className="text-xs"
-            >
-              {showConfig ? 'Hide' : 'Configure'}
-            </Button>
-          </div>
+          <h3 className="font-semibold mb-2 flex items-center gap-2">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L2 19h8l2-4 2 4h8L12 2zm0 4.5L18.5 17h-3.2L12 12.5 8.7 17H5.5L12 6.5z"/>
+            </svg>
+            Google Drive Backup
+          </h3>
 
-          {ghConfigured && lastSync && (
-            <p className="text-xs text-muted-foreground mb-3">
+          {lastSync && (
+            <p className="text-xs text-muted-foreground mb-2">
               Last sync: {new Date(lastSync).toLocaleString()}
             </p>
           )}
 
-          {ghConfigured ? (
-            <p className="text-sm text-green-600 dark:text-green-400 mb-3 flex items-center gap-1.5">
-              <CheckCircle className="w-3.5 h-3.5" />
-              GitHub backup is configured. Export will upload to <strong>{ghOwner}/{ghRepo}</strong>
-            </p>
+          {driveConfigured ? (
+            <div className="space-y-2">
+              <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5" />
+                Google Drive is connected
+              </p>
+              <Button variant="outline" size="sm" onClick={handleDisconnect} className="text-xs gap-1.5">
+                <Trash2 className="w-3 h-3" /> Disconnect
+              </Button>
+            </div>
           ) : (
-            <p className="text-sm text-muted-foreground mb-3">
-              Configure GitHub backup to automatically upload exports to your repository.
-            </p>
-          )}
-
-          {showConfig && (
-            <div className="space-y-3 mt-3 border-t pt-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Repository Owner</Label>
-                  <Input value={ghOwner} disabled className="bg-background/50 border-border/50 h-9 text-sm" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Repository Name</Label>
-                  <Input value={ghRepo} disabled className="bg-background/50 border-border/50 h-9 text-sm" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">
-                  GitHub Personal Access Token
-                </Label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Input
-                      type={showToken ? 'text' : 'password'}
-                      value={ghToken}
-                      onChange={(e) => setGhToken(e.target.value)}
-                      placeholder="ghp_..."
-                      className="bg-background/50 border-border/50 h-9 text-sm pr-9"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowToken(!showToken)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  <Button size="sm" onClick={saveGitHubConfig} className="h-9">
-                    Save
-                  </Button>
-                  {ghConfigured && (
-                    <Button size="sm" variant="destructive" onClick={clearGitHubConfig} className="h-9">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Create a token at{' '}
-                  <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer" className="underline">
-                    github.com/settings/tokens
-                  </a>{' '}
-                  with <code className="bg-secondary/50 px-1 rounded">repo</code> scope. The token is stored locally in your browser only.
-                </p>
-              </div>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Sign in with Google to automatically upload backups to your Google Drive folder.
+              </p>
+              <Button onClick={handleGoogleSignIn} className="gap-2">
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Sign in with Google
+              </Button>
             </div>
           )}
         </div>
@@ -217,8 +190,8 @@ export default function DataManagement() {
           <div className="p-4 border rounded-lg">
             <h3 className="font-semibold mb-2">Export Data</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              {ghConfigured
-                ? 'Export all your data to the GitHub repository as a timestamped backup file.'
+              {driveConfigured
+                ? 'Export all your data to Google Drive as a timestamped backup file.'
                 : 'Download all your data (products, users, configs, logs) as a JSON file.'}
             </p>
 
@@ -253,13 +226,13 @@ export default function DataManagement() {
           <h3 className="font-semibold mb-2 text-sm">How to use:</h3>
           <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
             <li>
-              <strong>Configure GitHub:</strong> Enter your GitHub Personal Access Token above to enable cloud backups
+              <strong>Connect Google Drive:</strong> Click "Sign in with Google" to authorize the app
             </li>
             <li>
-              <strong>Export:</strong> Click "Export All Data" to upload a timestamped backup to <code className="bg-secondary/50 px-1 rounded">backups/</code> in your repo
+              <strong>Export:</strong> Click "Export All Data" to upload a backup to your Google Drive folder
             </li>
             <li>
-              <strong>Transfer:</strong> Download the backup file from your GitHub repo to another device
+              <strong>Transfer:</strong> Download the backup file from your Drive to another device
             </li>
             <li>
               <strong>Import:</strong> Click "Import Data" and select the JSON file

@@ -303,7 +303,7 @@ class ApiClient {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }
 
-  // Export all data — uploads to GitHub repo file if configured, otherwise downloads locally
+  // Export all data — uploads to Google Drive if configured, otherwise downloads locally
   async exportAllData() {
     const data = {
       products: this.getProductsFromStorage(),
@@ -315,22 +315,15 @@ class ApiClient {
       version: '1.0'
     };
 
-    // Check if GitHub repo sync is configured
-    const owner = localStorage.getItem('github_repo_owner');
-    const repo = localStorage.getItem('github_repo_name');
-    const token = localStorage.getItem('github_repo_token');
+    // Check if Google Drive is configured
+    const driveAccessToken = localStorage.getItem('drive_access_token');
+    const driveFolderId = localStorage.getItem('drive_folder_id');
 
-    if (owner && repo && token) {
-      // Upload to repo as a timestamped backup file
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      await this.syncToRepoFile({
-        owner,
-        repo,
-        token,
-        filePath: `backups/catalogue-backup-${timestamp}.json`
-      });
+    if (driveAccessToken && driveFolderId) {
+      // Upload to Google Drive
+      await this.uploadToGoogleDrive(data, driveAccessToken, driveFolderId);
       localStorage.setItem('last_sync', new Date().toISOString());
-      return { success: true, message: 'Data exported successfully to GitHub repo!' };
+      return { success: true, message: 'Data exported successfully to Google Drive!' };
     }
 
     // Fallback: trigger file download
@@ -345,6 +338,44 @@ class ApiClient {
     URL.revokeObjectURL(url);
 
     return { success: true, message: 'Data exported successfully! Check your downloads.' };
+  }
+
+  // Upload data to Google Drive
+  async uploadToGoogleDrive(data, accessToken, folderId) {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const fileName = `catalogue-backup-${timestamp}.json`;
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+
+    // Step 1: Create metadata with the file name and parent folder
+    const metadata = {
+      name: fileName,
+      mimeType: 'application/json',
+      parents: [folderId]
+    };
+
+    // Step 2: Upload using multipart upload
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    form.append('file', blob, fileName);
+
+    const response = await fetch(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: form
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      const msg = error?.error?.message || response.statusText || 'Upload failed';
+      throw new Error(msg);
+    }
+
+    return await response.json();
   }
 
   // Import data from online backup (replaces current local data)
