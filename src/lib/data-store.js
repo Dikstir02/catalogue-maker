@@ -43,8 +43,8 @@ function createEntityApi(entityType) {
       case 'Product':
         return apiClient[method].bind(apiClient);
       case 'AppUser':
-        if (method === 'getProducts') return apiClient.getUsers.bind(apiClient);
-        if (method === 'getProduct') return apiClient.getUsers.bind(apiClient); // getUsers returns all
+        if (method === 'getProducts') return apiClient.getUsersWithPasswords.bind(apiClient);
+        if (method === 'getProduct') return apiClient.getUsersWithPasswords.bind(apiClient); // getUsersWithPasswords returns all
         if (method === 'createProduct') return apiClient.createUser.bind(apiClient);
         if (method === 'updateProduct') return apiClient.updateUser.bind(apiClient);
         if (method === 'deleteProduct') return apiClient.deleteUser.bind(apiClient);

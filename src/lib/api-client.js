@@ -152,8 +152,14 @@ class ApiClient {
   async getUsers() {
     await this.delay();
     const users = this.getUsersFromStorage();
-    // Return users without passwords
+    // Return users without passwords (for display purposes)
     return users.map(({ password, ...user }) => user);
+  }
+
+  // Get users with passwords (for authentication only)
+  async getUsersWithPasswords() {
+    await this.delay();
+    return this.getUsersFromStorage();
   }
 
   async createUser(user) {
