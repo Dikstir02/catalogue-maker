@@ -303,6 +303,88 @@ class ApiClient {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }
 
+  // Export all data to JSON file
+  exportAllData() {
+    const data = {
+      products: this.getProductsFromStorage(),
+      users: this.getUsersFromStorage(),
+      configs: this.getConfigsFromStorage(),
+      edit_logs: this.getEditLogsFromStorage(),
+      export_logs: this.getExportLogsFromStorage(),
+      exportDate: new Date().toISOString(),
+      version: '1.0'
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `catalogue-maker-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    return { success: true, message: 'Data exported successfully' };
+  }
+
+  // Import data from JSON file
+  async importAllData(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          
+          // Validate data structure
+          if (!data.products || !Array.isArray(data.products)) {
+            throw new Error('Invalid backup file: missing products data');
+          }
+
+          // Confirm import
+          const confirmed = confirm(
+            `This will replace all your current data with the imported data.\n\n` +
+            `Products: ${data.products.length}\n` +
+            `Users: ${data.users?.length || 0}\n` +
+            `Export Date: ${data.exportDate || 'Unknown'}\n\n` +
+            `Are you sure you want to continue?`
+          );
+
+          if (!confirmed) {
+            resolve({ success: false, message: 'Import cancelled' });
+            return;
+          }
+
+          // Import data
+          if (data.products) this.saveProductsToStorage(data.products);
+          if (data.users) this.saveUsersToStorage(data.users);
+          if (data.configs) this.saveConfigsToStorage(data.configs);
+          if (data.edit_logs) this.saveEditLogsToStorage(data.edit_logs);
+          if (data.export_logs) this.saveExportLogsToStorage(data.export_logs);
+
+          resolve({ 
+            success: true, 
+            message: 'Data imported successfully! Please refresh the page.',
+            data: {
+              products: data.products.length,
+              users: data.users?.length || 0,
+              configs: data.configs?.length || 0
+            }
+          });
+        } catch (error) {
+          reject(new Error('Invalid backup file: ' + error.message));
+        }
+      };
+
+      reader.onerror = () => {
+        reject(new Error('Failed to read file'));
+      };
+
+      reader.readAsText(file);
+    });
+  }
+
   // Helper methods
   delay(ms = 100) {
     return new Promise(resolve => setTimeout(resolve, ms));
