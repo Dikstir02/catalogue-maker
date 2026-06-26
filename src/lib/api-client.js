@@ -456,6 +456,22 @@ class ApiClient {
     localStorage.removeItem('gist_id');
     localStorage.removeItem('gist_token');
     localStorage.removeItem('last_sync');
+    localStorage.removeItem('auto_sync_enabled');
+  }
+
+  // Enable auto sync
+  enableAutoSync() {
+    localStorage.setItem('auto_sync_enabled', 'true');
+  }
+
+  // Disable auto sync
+  disableAutoSync() {
+    localStorage.removeItem('auto_sync_enabled');
+  }
+
+  // Check if auto sync is enabled
+  isAutoSyncEnabled() {
+    return localStorage.getItem('auto_sync_enabled') === 'true';
   }
 
   // Import data from JSON file

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Download, Upload, AlertTriangle, CheckCircle, Cloud, CloudOff, RefreshCw } from 'lucide-react';
 
 export default function DataManagement() {
@@ -14,6 +15,7 @@ export default function DataManagement() {
   const [messageType, setMessageType] = useState(null);
   const [gistToken, setGistToken] = useState('');
   const [syncStatus, setSyncStatus] = useState(apiClient.getSyncStatus());
+  const [autoSync, setAutoSync] = useState(apiClient.isAutoSyncEnabled());
 
   const handleExport = async () => {
     setExporting(true);
@@ -104,11 +106,44 @@ export default function DataManagement() {
     if (confirm('Are you sure you want to clear sync configuration?')) {
       apiClient.clearSync();
       setSyncStatus(apiClient.getSyncStatus());
+      setAutoSync(false);
       setMessage({ text: 'Sync configuration cleared', type: 'success' });
       setMessageType('success');
       setTimeout(() => setMessage(null), 3000);
     }
   };
+
+  const handleAutoSyncToggle = async (enabled) => {
+    setAutoSync(enabled);
+    if (enabled) {
+      apiClient.enableAutoSync();
+      setMessage({ text: 'Auto-sync enabled. Data will sync every 1 minute.', type: 'success' });
+      setMessageType('success');
+    } else {
+      apiClient.disableAutoSync();
+      setMessage({ text: 'Auto-sync disabled', type: 'success' });
+      setMessageType('success');
+    }
+    setTimeout(() => setMessage(null), 3000);
+  };
+
+  // Auto sync every 1 minute
+  useEffect(() => {
+    if (!autoSync || !syncStatus.isConfigured) return;
+
+    const interval = setInterval(async () => {
+      try {
+        // Sync from cloud first (to get latest changes)
+        await apiClient.syncFromGist(syncStatus.gistId, localStorage.getItem('gist_token'));
+        localStorage.setItem('last_sync', new Date().toISOString());
+        setSyncStatus(apiClient.getSyncStatus());
+      } catch (error) {
+        console.error('Auto sync failed:', error);
+      }
+    }, 60000); // 60 seconds
+
+    return () => clearInterval(interval);
+  }, [autoSync, syncStatus.isConfigured, syncStatus.gistId]);
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -215,9 +250,12 @@ export default function DataManagement() {
                   <Cloud className="w-4 h-4 mr-2" />
                   {syncing ? 'Syncing...' : 'Enable Cloud Sync'}
                 </Button>
+                <p className="text-xs text-muted-foreground">
+                  After enabling, you can turn on auto-sync to automatically sync every 1 minute
+                </p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex gap-2">
                   <Button
                     onClick={handleSyncFromGist}
@@ -238,6 +276,21 @@ export default function DataManagement() {
                     {syncing ? 'Syncing...' : 'Sync to Cloud'}
                   </Button>
                 </div>
+                
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="w-4 h-4 text-primary" />
+                    <Label htmlFor="auto-sync" className="text-sm font-medium cursor-pointer">
+                      Auto-sync every 1 minute
+                    </Label>
+                  </div>
+                  <Switch
+                    id="auto-sync"
+                    checked={autoSync}
+                    onCheckedChange={handleAutoSyncToggle}
+                  />
+                </div>
+                
                 <Button
                   onClick={handleClearSync}
                   variant="ghost"
