@@ -1,8 +1,8 @@
-# Catalogue Maker - Online Database Setup
+# Catalogue Maker - GitHub Pages Deployment
 
-Your catalogue maker app is now ready to be deployed online with a cloud database!
+Your catalogue maker app is ready to be deployed on GitHub Pages!
 
-## 🚀 Quick Start (3 Steps to Go Live)
+## 🚀 Quick Start (Deploy to GitHub Pages)
 
 ### Step 1: Install Git
 Download from: https://git-scm.com/download/win
@@ -17,7 +17,7 @@ cd c:/Users/Dexter/Desktop/catalogue-maker
 
 git init
 git add .
-git commit -m "Initial commit - cloud database setup"
+git commit -m "Initial commit"
 git branch -M main
 
 # Create repo at github.com/new, then:
@@ -25,83 +25,77 @@ git remote add origin https://github.com/YOUR_USERNAME/catalogue-maker.git
 git push -u origin main
 ```
 
-### Step 3: Deploy Backend to Render
-1. Go to https://render.com and sign up with GitHub
-2. Click **New** → **Web Service**
-3. Connect your `catalogue-maker-backend` repo (create it first on GitHub)
-4. Configure:
-   - Build Command: `npm install`
-   - Start Command: `node server.js`
-   - Plan: Free
-5. Click **Create Web Service**
-6. Copy your API URL (e.g., `https://catalogue-maker-api.onrender.com`)
+### Step 3: Enable GitHub Pages
+1. Go to your repository on GitHub
+2. Click **Settings** → **Pages**
+3. Under **Source**, select **Deploy from a branch**
+4. Under **Branch**, select **main** and folder **/ (root)**
+5. Click **Save**
+6. Wait 2-3 minutes for deployment
+7. Your site will be available at: `https://YOUR_USERNAME.github.io/catalogue-maker/`
 
-### Step 4: Deploy Frontend to Netlify
-1. Update `.env` with your Render URL:
-   ```
-   VITE_API_URL=https://catalogue-maker-api.onrender.com/api
-   ```
-2. Build: `npm run build`
-3. Go to https://app.netlify.com/drop
-4. Drag the `dist` folder into the browser
-5. Your app is live! 🎉
+## 📚 Local Development
 
-## 📚 Detailed Guides
+### Running the App Locally
 
-- **SETUP_INSTRUCTIONS.md** - Quick local testing guide
-- **DEPLOYMENT.md** - 5 different deployment options
-- **COMPLETE_DEPLOYMENT_GUIDE.md** - Step-by-step with Supabase for permanent database
+1. Install dependencies:
+```bash
+npm install
+```
 
-## 🔐 Default Login
+2. Start the development server:
+```bash
+npm run dev
+```
 
+3. Open browser to: `http://localhost:5173`
+
+### Default Login
 - Username: `dexter`
 - Password: `admin123`
 
-## 💡 What You Get
+## 💡 Features
 
-- ✅ Cloud database (accessible from anywhere)
-- ✅ REST API backend
-- ✅ Modern React frontend
-- ✅ File upload support
+- ✅ Modern React frontend with Vite
+- ✅ Local data storage (SQLite)
 - ✅ User authentication
-- ✅ Free hosting (Render + Netlify)
-- ✅ $0/month cost
+- ✅ Product management
+- ✅ Export to Excel/PDF
+- ✅ Responsive design with Tailwind CSS
+- ✅ Drag and drop interface
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: React + Vite + Tailwind CSS
-- **Backend**: Node.js + Express
-- **Database**: SQLite (local) / Supabase PostgreSQL (cloud)
-- **Hosting**: Render (backend) + Netlify (frontend)
+- **Backend**: None (client-side only for GitHub Pages)
+- **Database**: Browser localStorage/SQLite (local)
+- **Hosting**: GitHub Pages (free)
 
 ## 📝 Project Structure
 
 ```
 catalogue-maker/
-├── backend/              # API server
-│   ├── server.js        # Express server
-│   └── package.json     # Backend dependencies
 ├── src/
-│   └── lib/
-│       ├── api-client.js    # API communication
-│       └── data-store.js    # Data management
-├── .env                 # API configuration
-└── package.json         # Frontend dependencies
+│   ├── components/       # React components
+│   ├── pages/           # Page components
+│   ├── lib/             # Utilities and data store
+│   └── main.jsx         # Entry point
+├── index.html
+├── package.json
+└── vite.config.js
 ```
 
 ## 🆘 Need Help?
 
-1. Read **COMPLETE_DEPLOYMENT_GUIDE.md** for detailed instructions
-2. Check browser console (F12) for errors
-3. Verify API URL in `.env` is correct
-4. Test backend: `https://your-api.onrender.com/api/health`
+1. Check the browser console (F12) for errors
+2. Ensure all dependencies are installed: `npm install`
+3. Try clearing browser cache and reloading
 
 ## 🎯 Next Steps
 
 1. Install Git
 2. Push code to GitHub
-3. Deploy backend to Render
-4. Deploy frontend to Netlify
-5. Share your app with the world!
+3. Enable GitHub Pages in repository settings
+4. Share your app with the world!
 
-Your catalogue maker is now ready to go live! 🌍
+Your catalogue maker is now ready to go live on GitHub Pages! 🌍

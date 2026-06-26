@@ -1,46 +1,62 @@
 @echo off
+chcp 65001 >nul
+echo.
 echo ============================================
-echo Pushing Catalogue Maker to GitHub
+echo   CATALOGUE MAKER - PUSH TO GITHUB
 echo ============================================
 echo.
-
-echo Step 1: Initializing Git repository...
+echo This script will help you push your code to GitHub.
+echo You will need to:
+echo   1. Create a GitHub account (free)
+echo   2. Create a repository on GitHub
+echo   3. Copy the repository URL
+echo.
+pause
+echo.
+echo Step 1: Create GitHub Repository
+echo --------------------------------------------
+echo.
+echo 1. Opening GitHub in your browser...
+start https://github.com/new
+echo.
+echo 2. Create a repository named: catalogue-maker
+echo 3. Keep this window open and switch to browser
+echo.
+pause
+echo.
+echo Step 2: Initialize Git and Push
+echo --------------------------------------------
+echo.
+echo Initializing git repository...
 git init
-
-echo.
-echo Step 2: Adding all files...
 git add .
-
-echo.
-echo Step 3: Committing files...
-git commit -m "Initial commit - cloud database setup"
-
-echo.
-echo Step 4: Renaming branch to main...
+git commit -m "Initial commit"
 git branch -M main
-
 echo.
-echo ============================================
-echo IMPORTANT: Create a repository on GitHub first!
-echo ============================================
+echo Files committed successfully!
 echo.
-echo 1. Go to: https://github.com/new
-echo 2. Repository name: catalogue-maker
-echo 3. Click "Create repository"
-echo 4. Copy the repository URL
+echo Now you need to:
+echo 1. Copy the GitHub repository URL from your browser
+echo    (Example: https://github.com/yourname/catalogue-maker.git)
+echo 2. Paste it below
 echo.
-set /p repo_url="Paste your GitHub repository URL here: "
-
+set /p repo_url="GitHub Repository URL: "
 echo.
-echo Step 5: Adding remote repository...
+echo Adding remote and pushing...
 git remote add origin %repo_url%
-
-echo.
-echo Step 6: Pushing to GitHub...
 git push -u origin main
-
 echo.
 echo ============================================
-echo SUCCESS! Your code is now on GitHub!
+echo   SUCCESS! Code pushed to GitHub!
 echo ============================================
+echo.
+echo Next steps:
+echo 1. Go to your repository on GitHub
+echo 2. Click Settings ^> Pages
+echo 3. Select 'Deploy from a branch' ^> main ^> / (root)
+echo 4. Click Save
+echo 5. Wait 2-3 minutes for deployment
+echo.
+echo Your site will be at: https://YOUR_USERNAME.github.io/catalogue-maker/
+echo.
 pause

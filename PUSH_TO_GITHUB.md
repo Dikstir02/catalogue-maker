@@ -8,7 +8,7 @@ I've created `push-to-github.bat` in your project folder. Here's how to use it:
 
 1. Open browser to: https://github.com/new
 2. Repository name: `catalogue-maker`
-3. Description: "Online catalogue maker with cloud database"
+3. Description: "Online catalogue maker"
 4. Select: **Public** (or Private)
 5. **DO NOT** check "Add a README file"
 6. Click **Create repository**
@@ -22,11 +22,22 @@ I've created `push-to-github.bat` in your project folder. Here's how to use it:
 5. Press Enter
 6. Wait for it to complete
 
-### Step 3: Verify
+### Step 3: Enable GitHub Pages
 
-Go to: `https://github.com/yourusername/catalogue-maker`
+1. Go to your repository on GitHub
+2. Click **Settings** → **Pages**
+3. Under **Source**, select **Deploy from a branch**
+4. Under **Branch**, select **main** and folder **/ (root)**
+5. Click **Save**
+6. Wait 2-3 minutes for deployment
 
-You should see all your files!
+### Step 4: Access Your Site
+
+Your site will be available at: `https://YOUR_USERNAME.github.io/catalogue-maker/`
+
+Login with:
+- Username: `dexter`
+- Password: `admin123`
 
 ---
 
@@ -47,7 +58,7 @@ git init
 git add .
 
 # Commit
-git commit -m "Initial commit - cloud database setup"
+git commit -m "Initial commit"
 
 # Rename branch
 git branch -M main
@@ -76,18 +87,18 @@ When prompted:
 
 ## After Pushing to GitHub
 
-### Next: Deploy Backend
+### Enable GitHub Pages
 
-1. Create a NEW repository on GitHub: `catalogue-maker-backend`
-2. Copy only the `backend` folder contents to a new folder
-3. Push that folder to `catalogue-maker-backend` repo
-4. Deploy on Render.com (see COMPLETE_DEPLOYMENT_GUIDE.md)
+1. Go to your repository on GitHub
+2. Click **Settings** → **Pages**
+3. Under **Source**, select **Deploy from a branch**
+4. Under **Branch**, select **main** and folder **/ (root)**
+5. Click **Save**
+6. Wait 2-3 minutes for deployment
 
-### Then: Deploy Frontend
+### Access Your Live Site
 
-1. Update `.env` with your Render API URL
-2. Build: `npm run build`
-3. Deploy `dist` folder to Netlify
+Your site will be at: `https://YOUR_USERNAME.github.io/catalogue-maker/`
 
 ---
 
@@ -106,15 +117,21 @@ When prompted:
 - Make sure you created the repo on GitHub
 - Verify you have access to the repo
 
+### Site not loading?
+- Wait 2-3 minutes after enabling GitHub Pages
+- Check that all files were pushed to GitHub
+- Verify GitHub Pages is enabled in Settings → Pages
+
 ---
 
 ## Your Files Are Ready!
 
 All the code is in place:
-- ✅ Backend API server
-- ✅ Frontend with cloud integration
-- ✅ Database schema
-- ✅ Deployment guides
+- ✅ React frontend with Vite
+- ✅ Local data storage
+- ✅ User authentication
+- ✅ Product management
+- ✅ Export functionality
 - ✅ .gitignore (protects sensitive files)
 
 Just run the script or follow the manual steps above!

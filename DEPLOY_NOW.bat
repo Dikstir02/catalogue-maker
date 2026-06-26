@@ -2,14 +2,14 @@
 chcp 65001 >nul
 echo.
 echo ============================================
-echo   CATALOGUE MAKER - AUTO DEPLOYMENT
+echo   CATALOGUE MAKER - DEPLOY TO GITHUB PAGES
 echo ============================================
 echo.
-echo This script will guide you through deployment.
+echo This script will guide you through deployment to GitHub Pages.
 echo You will need to:
 echo   1. Create a GitHub account (free)
-echo   2. Create accounts on Render and Netlify (free)
-echo   3. Copy/paste some URLs
+echo   2. Create a repository on GitHub
+echo   3. Copy/paste the repository URL
 echo.
 pause
 echo.
@@ -30,7 +30,7 @@ echo.
 echo Initializing git repository...
 git init
 git add .
-git commit -m "Initial commit - cloud database setup"
+git commit -m "Initial commit"
 git branch -M main
 echo.
 echo Files committed successfully!
@@ -51,11 +51,12 @@ echo   SUCCESS! Code pushed to GitHub!
 echo ============================================
 echo.
 echo Next steps:
-echo 1. Create a NEW repo: catalogue-maker-backend
-echo 2. Copy backend folder contents to new folder
-echo 3. Push to catalogue-maker-backend
-echo 4. Deploy on Render.com
+echo 1. Go to your repository on GitHub
+echo 2. Click Settings ^> Pages
+echo 3. Select 'Deploy from a branch' ^> main ^> / (root)
+echo 4. Click Save
+echo 5. Wait 2-3 minutes for deployment
 echo.
-echo See COMPLETE_DEPLOYMENT_GUIDE.md for details.
+echo Your site will be at: https://YOUR_USERNAME.github.io/catalogue-maker/
 echo.
 pause
