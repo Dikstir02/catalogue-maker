@@ -16,6 +16,7 @@ export default function DataManagement() {
   const [gistToken, setGistToken] = useState('');
   const [syncStatus, setSyncStatus] = useState(apiClient.getSyncStatus());
   const [autoSync, setAutoSync] = useState(apiClient.isAutoSyncEnabled());
+  const [countdown, setCountdown] = useState(10);
 
   const handleExport = async () => {
     setExporting(true);
@@ -117,7 +118,7 @@ export default function DataManagement() {
     setAutoSync(enabled);
     if (enabled) {
       apiClient.enableAutoSync();
-      setMessage({ text: 'Auto-sync enabled. Data will sync every 1 minute.', type: 'success' });
+      setMessage({ text: 'Auto-sync enabled. Data will sync every 10 seconds.', type: 'success' });
       setMessageType('success');
     } else {
       apiClient.disableAutoSync();
@@ -127,7 +128,21 @@ export default function DataManagement() {
     setTimeout(() => setMessage(null), 3000);
   };
 
-  // Auto sync every 1 minute
+  // Countdown timer
+  useEffect(() => {
+    if (!autoSync || !syncStatus.isConfigured) {
+      setCountdown(10);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setCountdown(prev => prev <= 1 ? 10 : prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [autoSync, syncStatus.isConfigured, syncStatus.lastSync]);
+
+  // Auto sync every 10 seconds
   useEffect(() => {
     if (!autoSync || !syncStatus.isConfigured) return;
 
@@ -137,10 +152,11 @@ export default function DataManagement() {
         await apiClient.syncFromGist(syncStatus.gistId, localStorage.getItem('gist_token'));
         localStorage.setItem('last_sync', new Date().toISOString());
         setSyncStatus(apiClient.getSyncStatus());
+        setCountdown(10); // Reset countdown after sync
       } catch (error) {
         console.error('Auto sync failed:', error);
       }
-    }, 60000); // 60 seconds
+    }, 10000); // 10 seconds
 
     return () => clearInterval(interval);
   }, [autoSync, syncStatus.isConfigured, syncStatus.gistId]);
@@ -223,6 +239,14 @@ export default function DataManagement() {
                 </span>
               )}
             </p>
+            {autoSync && syncStatus.isConfigured && (
+              <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-lg">
+                <RefreshCw className="w-4 h-4 text-primary animate-spin" />
+                <span className="text-xs font-medium text-primary">
+                  Next sync in: {countdown} seconds
+                </span>
+              </div>
+            )}
 
             {!syncStatus.isConfigured ? (
               <div className="space-y-3">
@@ -251,7 +275,7 @@ export default function DataManagement() {
                   {syncing ? 'Syncing...' : 'Enable Cloud Sync'}
                 </Button>
                 <p className="text-xs text-muted-foreground">
-                  After enabling, you can turn on auto-sync to automatically sync every 1 minute
+                  After enabling, you can turn on auto-sync to automatically sync every 10 seconds
                 </p>
               </div>
             ) : (
@@ -281,7 +305,7 @@ export default function DataManagement() {
                   <div className="flex items-center gap-2">
                     <RefreshCw className="w-4 h-4 text-primary" />
                     <Label htmlFor="auto-sync" className="text-sm font-medium cursor-pointer">
-                      Auto-sync every 1 minute
+                      Auto-sync every 10 seconds
                     </Label>
                   </div>
                   <Switch
