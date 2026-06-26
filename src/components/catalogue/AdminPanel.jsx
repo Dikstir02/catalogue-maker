@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, UserPlus, Key, FileText, Trash2, ClipboardEdit, Tags, Plus, X } from "lucide-react";
+import { Loader2, UserPlus, Key, FileText, Trash2, ClipboardEdit, Tags, Plus, X, Database } from "lucide-react";
 import { format } from "date-fns";
+import DataManagement from "@/components/DataManagement";
 
 const ROLE_OPTIONS = [
   { value: "admin", label: "Admin", desc: "Full access" },
@@ -42,12 +43,14 @@ export default function AdminPanel({ open, onOpenChange, currentUser, onPassword
             <TabsTrigger value="password" className="flex-1 gap-1.5 text-xs"><Key className="w-3.5 h-3.5" />Password</TabsTrigger>
             <TabsTrigger value="editlogs" className="flex-1 gap-1.5 text-xs"><ClipboardEdit className="w-3.5 h-3.5" />Edit Logs</TabsTrigger>
             <TabsTrigger value="logs" className="flex-1 gap-1.5 text-xs"><FileText className="w-3.5 h-3.5" />Export Logs</TabsTrigger>
+            <TabsTrigger value="data" className="flex-1 gap-1.5 text-xs"><Database className="w-3.5 h-3.5" />Data</TabsTrigger>
           </TabsList>
           <TabsContent value="users"><UserManager /></TabsContent>
           <TabsContent value="catalogue"><CatalogueManager /></TabsContent>
           <TabsContent value="password"><ChangePassword currentUser={currentUser} onChanged={onPasswordChanged} /></TabsContent>
           <TabsContent value="editlogs"><EditLogs /></TabsContent>
           <TabsContent value="logs"><ExportLogs /></TabsContent>
+          <TabsContent value="data"><DataManagement /></TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>
