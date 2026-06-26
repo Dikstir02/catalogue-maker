@@ -356,18 +356,6 @@ class ApiClient {
       throw new Error('Invalid backup payload');
     }
 
-    const confirmed = confirm(
-      `This will replace all your current data with the latest cloud backup.\n\n` +
-      `Products: ${data.products.length}\n` +
-      `Users: ${data.users?.length || 0}\n` +
-      `Export Date: ${data.exportDate || 'Unknown'}\n\n` +
-      `Are you sure you want to continue?`
-    );
-
-    if (!confirmed) {
-      return { success: false, message: 'Import cancelled' };
-    }
-
     if (data.products) this.saveProductsToStorage(data.products);
     if (data.users) this.saveUsersToStorage(data.users);
     if (data.configs) this.saveConfigsToStorage(data.configs);
@@ -496,21 +484,6 @@ class ApiClient {
       throw new Error('Invalid data in repo file');
     }
 
-    // Confirm import (skip for auto-sync)
-    if (!skipConfirmation) {
-      const confirmed = confirm(
-        `This will replace all your current data with data from the Gist.\n\n` +
-        `Products: ${data.products.length}\n` +
-        `Users: ${data.users?.length || 0}\n` +
-        `Last Sync: ${data.exportDate || 'Unknown'}\n\n` +
-        `Are you sure you want to continue?`
-      );
-
-      if (!confirmed) {
-        return { success: false, message: 'Sync cancelled' };
-      }
-    }
-
     // Import data
     if (data.products) this.saveProductsToStorage(data.products);
     if (data.users) this.saveUsersToStorage(data.users);
@@ -609,19 +582,6 @@ class ApiClient {
       throw new Error('Invalid backup file: missing products data');
     }
 
-    // Confirm import
-    const confirmed = confirm(
-      `This will replace all your current data with the imported data.\n\n` +
-      `Products: ${data.products.length}\n` +
-      `Users: ${data.users?.length || 0}\n` +
-      `Export Date: ${data.exportDate || 'Unknown'}\n\n` +
-      `Are you sure you want to continue?`
-    );
-
-    if (!confirmed) {
-      return { success: false, message: 'Import cancelled' };
-    }
-
     // Import data
     if (data.products) this.saveProductsToStorage(data.products);
     if (data.users) this.saveUsersToStorage(data.users);
@@ -713,20 +673,6 @@ class ApiClient {
           // Validate data structure
           if (!data.products || !Array.isArray(data.products)) {
             throw new Error('Invalid backup file: missing products data');
-          }
-
-          // Confirm import
-          const confirmed = confirm(
-            `This will replace all your current data with the imported data.\n\n` +
-            `Products: ${data.products.length}\n` +
-            `Users: ${data.users?.length || 0}\n` +
-            `Export Date: ${data.exportDate || 'Unknown'}\n\n` +
-            `Are you sure you want to continue?`
-          );
-
-          if (!confirmed) {
-            resolve({ success: false, message: 'Import cancelled' });
-            return;
           }
 
           // Import data

@@ -268,7 +268,6 @@ function CatalogueApp({ appUser, onLogout }) {
     { icon: <Image className="w-4 h-4" />, label: "Bulk Images", onClick: () => setShowBulkImage(true) },
     { icon: <FileUp className="w-4 h-4" />, label: "Update Stocks", onClick: () => setShowUpdateStocks(true) },
     { icon: <FileUp className="w-4 h-4" />, label: "Bulk Import", onClick: () => setShowBulkImport(true) },
-    { icon: <Download className="w-4 h-4" />, label: "Sync Data", onClick: () => setShowBackupImport(true) },
   ];
 
   const showUtilities = isAdmin || isManager;
