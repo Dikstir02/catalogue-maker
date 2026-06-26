@@ -267,8 +267,7 @@ function CatalogueApp({ appUser, onLogout }) {
     { icon: <Image className="w-4 h-4" />, label: "Bulk Images", onClick: () => setShowBulkImage(true) },
     { icon: <FileUp className="w-4 h-4" />, label: "Update Stocks", onClick: () => setShowUpdateStocks(true) },
     { icon: <FileUp className="w-4 h-4" />, label: "Bulk Import", onClick: () => setShowBulkImport(true) },
-    // Non-admins: allow importing backed up JSON from dashboard
-    ...(!isAdmin ? [{ icon: <Download className="w-4 h-4" />, label: "Import Backup JSON", onClick: () => setShowBackupImport(true) }] : []),
+    { icon: <Download className="w-4 h-4" />, label: "Sync Data", onClick: () => setShowBackupImport(true) },
   ];
 
   return (
@@ -321,10 +320,8 @@ function CatalogueApp({ appUser, onLogout }) {
                 </>
               )}
 
-              {/* Utilities dropdown */}
-              {canManageProducts && (
-                <DropdownBtn label="Utilities" icon={<Wrench className="w-4 h-4" />} items={utilitiesItems} />
-              )}
+              {/* Utilities dropdown — includes Sync Data for all users */}
+              <DropdownBtn label="Utilities" icon={<Wrench className="w-4 h-4" />} items={utilitiesItems} />
 
               {/* Add Product */}
               {canManageProducts && (
