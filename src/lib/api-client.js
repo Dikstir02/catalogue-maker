@@ -40,6 +40,12 @@ class ApiClient {
     };
   }
 
+  // Alias for compatibility with login forms that use email/password naming
+  async loginViaEmailPassword(email, password) {
+    // Treat email as username for simplicity
+    return this.login(email, password);
+  }
+
   async getCurrentUser() {
     if (!this.token) {
       return { user: null };
