@@ -303,7 +303,7 @@ class ApiClient {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }
 
-  // Export all data as a JSON file download (client-side)
+  // Export all data — uploads to GitHub repo file if configured, otherwise downloads locally
   async exportAllData() {
     const data = {
       products: this.getProductsFromStorage(),
@@ -315,7 +315,25 @@ class ApiClient {
       version: '1.0'
     };
 
-    // Trigger file download
+    // Check if GitHub repo sync is configured
+    const owner = localStorage.getItem('github_repo_owner');
+    const repo = localStorage.getItem('github_repo_name');
+    const token = localStorage.getItem('github_repo_token');
+
+    if (owner && repo && token) {
+      // Upload to repo as a timestamped backup file
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      await this.syncToRepoFile({
+        owner,
+        repo,
+        token,
+        filePath: `backups/catalogue-backup-${timestamp}.json`
+      });
+      localStorage.setItem('last_sync', new Date().toISOString());
+      return { success: true, message: 'Data exported successfully to GitHub repo!' };
+    }
+
+    // Fallback: trigger file download
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
