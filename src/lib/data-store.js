@@ -37,13 +37,44 @@ const entityEndpoints = {
 function createEntityApi(entityType) {
   const endpoint = entityEndpoints[entityType];
   
+  // Get the appropriate API method based on entity type
+  const getApiMethod = (method) => {
+    switch(entityType) {
+      case 'Product':
+        return apiClient[method].bind(apiClient);
+      case 'AppUser':
+        if (method === 'getProducts') return apiClient.getUsers.bind(apiClient);
+        if (method === 'getProduct') return apiClient.getUsers.bind(apiClient); // getUsers returns all
+        if (method === 'createProduct') return apiClient.createUser.bind(apiClient);
+        if (method === 'updateProduct') return apiClient.updateUser.bind(apiClient);
+        if (method === 'deleteProduct') return apiClient.deleteUser.bind(apiClient);
+        return apiClient[method].bind(apiClient);
+      case 'CatalogueConfig':
+        if (method === 'getProducts') return apiClient.getConfigs.bind(apiClient);
+        if (method === 'getProduct') return apiClient.getConfigs.bind(apiClient);
+        if (method === 'createProduct') return apiClient.updateConfig.bind(apiClient);
+        if (method === 'updateProduct') return apiClient.updateConfig.bind(apiClient);
+        return apiClient[method].bind(apiClient);
+      case 'EditLog':
+        if (method === 'getProducts') return apiClient.getEditLogs.bind(apiClient);
+        if (method === 'createProduct') return apiClient.createEditLog.bind(apiClient);
+        return apiClient[method].bind(apiClient);
+      case 'ExportLog':
+        if (method === 'getProducts') return apiClient.getExportLogs.bind(apiClient);
+        if (method === 'createProduct') return apiClient.createExportLog.bind(apiClient);
+        return apiClient[method].bind(apiClient);
+      default:
+        return apiClient[method].bind(apiClient);
+    }
+  };
+  
   return {
     list: async (sortStr) => {
-      const items = await apiClient.getProducts(sortStr);
+      const items = await getApiMethod('getProducts')();
       return sortStr ? sortItems(items, sortStr) : items;
     },
     filter: async (criteria) => {
-      const items = await apiClient.getProducts();
+      const items = await getApiMethod('getProducts')();
       if (!criteria || Object.keys(criteria).length === 0) return items;
       return items.filter((item) =>
         Object.entries(criteria).every(([key, value]) => {
@@ -56,18 +87,19 @@ function createEntityApi(entityType) {
       );
     },
     get: async (id) => {
-      return await apiClient.getProduct(id);
+      const items = await getApiMethod('getProduct')(id);
+      return items;
     },
     create: async (data) => {
-      const newItem = await apiClient.createProduct(data);
+      const newItem = await getApiMethod('createProduct')(data);
       return newItem;
     },
     update: async (id, data) => {
-      const updatedItem = await apiClient.updateProduct(id, data);
+      const updatedItem = await getApiMethod('updateProduct')(id, data);
       return updatedItem;
     },
     delete: async (id) => {
-      await apiClient.deleteProduct(id);
+      await getApiMethod('deleteProduct')(id);
       return true;
     },
   };
