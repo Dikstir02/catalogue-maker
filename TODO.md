@@ -1,15 +1,11 @@
 # TODO
 
-## Data Management cloud backup change
-- [ ] Remove Cloud Sync UI section from `src/components/DataManagement.jsx`
-- [ ] Remove GitHub/Gist sync logic usage from `src/components/DataManagement.jsx`
-- [ ] Implement backend backup endpoints in `backend/server.js`
-  - [ ] `POST /api/backup` store latest JSON
-  - [ ] `GET /api/backup` return latest JSON
-- [ ] Update `src/lib/api-client.js`
-  - [ ] Replace `exportAllData()` to upload JSON to `POST /api/backup`
-  - [ ] Add cloud import method that calls `GET /api/backup` and imports
-- [ ] Update `src/components/ImportBackedUpDataDialog.jsx` if needed
-- [ ] Update “How to use” text
-- [ ] Verify build/lint
+- [ ] Fix `src/components/DataManagement.jsx` runtime crash that causes Admin Panel → Data tab to render blank.
+  - Symptom: browser console `ReferenceError: autoSync is not defined`.
+  - Root cause: component references undefined hooks/state vars (autoSync, syncStatus, setSyncStatus, etc.).
+  - Update strategy: simplify component to only the working Export/Import UI so tab always renders; remove broken sync sections and any undefined variables.
+- [ ] Verify Data tab renders after fix.
+  - Manual: open Admin Panel → click Data tab.
+  - Console: ensure no ReferenceError in browser devtools.
+- [ ] Run `npm test`/`npm run build` if present.
 
