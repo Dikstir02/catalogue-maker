@@ -115,6 +115,44 @@ try {
 // Helper functions
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 
+// --- Backup storage (latest cloud backup JSON) ---
+const BACKUP_FILE = path.join(__dirname, 'latest-backup.json');
+
+const readLatestBackup = () => {
+  try {
+    const raw = require('fs').readFileSync(BACKUP_FILE, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
+
+const writeLatestBackup = (data) => {
+  require('fs').writeFileSync(BACKUP_FILE, JSON.stringify(data, null, 2), 'utf-8');
+};
+
+// Backup endpoints
+app.post('/api/backup', (req, res) => {
+  try {
+    const data = req.body;
+    if (!data || typeof data !== 'object') {
+      return res.status(400).json({ message: 'Invalid backup payload' });
+    }
+    writeLatestBackup(data);
+    res.json({ success: true, message: 'Backup stored successfully' });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to store backup' });
+  }
+});
+
+app.get('/api/backup', (req, res) => {
+  const data = readLatestBackup();
+  if (!data) {
+    return res.status(404).json({ message: 'No backup found yet' });
+  }
+  res.json(data);
+});
+
 // Auth endpoints
 app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body;

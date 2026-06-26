@@ -303,8 +303,8 @@ class ApiClient {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }
 
-  // Export all data to JSON file
-  exportAllData() {
+  // Export all data to JSON and store online (server-side)
+  async exportAllData() {
     const data = {
       products: this.getProductsFromStorage(),
       users: this.getUsersFromStorage(),
@@ -315,22 +315,66 @@ class ApiClient {
       version: '1.0'
     };
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `catalogue-maker-backup-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const resp = await fetch('/api/backup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
 
-    return { success: true, message: 'Data exported successfully' };
+    if (!resp.ok) {
+      const error = await resp.json().catch(() => null);
+      throw new Error(error?.message || 'Failed to store backup online');
+    }
+
+    return { success: true, message: 'Data exported successfully (stored online)' };
   }
 
-  // --------- GitHub repo file sync (replaces Gist) ---------
-  // Stores JSON backup in a single file within a GitHub repository.
-  // Repo params are kept in localStorage after enabling sync.
+  // Import data from online backup (replaces current local data)
+  async importAllDataFromCloud() {
+    const resp = await fetch('/api/backup', { method: 'GET' });
+    if (!resp.ok) {
+      const error = await resp.json().catch(() => null);
+      throw new Error(error?.message || 'Failed to fetch cloud backup');
+    }
+
+    const data = await resp.json();
+
+    // Validate data structure
+    if (!data.products || !Array.isArray(data.products)) {
+      throw new Error('Invalid backup payload');
+    }
+
+    const confirmed = confirm(
+      `This will replace all your current data with the latest cloud backup.\n\n` +
+      `Products: ${data.products.length}\n` +
+      `Users: ${data.users?.length || 0}\n` +
+      `Export Date: ${data.exportDate || 'Unknown'}\n\n` +
+      `Are you sure you want to continue?`
+    );
+
+    if (!confirmed) {
+      return { success: false, message: 'Import cancelled' };
+    }
+
+    if (data.products) this.saveProductsToStorage(data.products);
+    if (data.users) this.saveUsersToStorage(data.users);
+    if (data.configs) this.saveConfigsToStorage(data.configs);
+    if (data.edit_logs) this.saveEditLogsToStorage(data.edit_logs);
+    if (data.export_logs) this.saveExportLogsToStorage(data.export_logs);
+
+    return {
+      success: true,
+      message: 'Data imported successfully from cloud! Please refresh the page.',
+      data: {
+        products: data.products.length,
+        users: data.users?.length || 0,
+        configs: data.configs?.length || 0
+      }
+    };
+  }
+
+  // --------- GitHub repo file sync (removed) ---------
+
 
   // Expected localStorage keys:
   // - github_repo_owner (e.g. "myuser")

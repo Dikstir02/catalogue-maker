@@ -5,25 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Download, Upload, AlertTriangle, CheckCircle, Cloud, CloudOff, RefreshCw } from 'lucide-react';
+import { Download, Upload, AlertTriangle, CheckCircle } from 'lucide-react';
 
 export default function DataManagement() {
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState(null);
   const [messageType, setMessageType] = useState(null);
-  const [gistToken, setGistToken] = useState('');
-  const [repoOwner, setRepoOwner] = useState('');
-  const [repoName, setRepoName] = useState('');
-  const [branch, setBranch] = useState('master');
-  const [filePath, setFilePath] = useState('data/catalogue-data.json');
-
-  const [syncStatus, setSyncStatus] = useState(apiClient.getSyncStatus());
-  const [autoSync, setAutoSync] = useState(apiClient.isAutoSyncEnabled());
-
-  const [countdown, setCountdown] = useState(10);
   const queryClient = useQueryClient();
 
   const handleExport = async () => {
@@ -45,17 +33,37 @@ export default function DataManagement() {
 
   const handleImport = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (file) {
+      // Local import (legacy)
+      setImporting(true);
+      setMessage(null);
 
+      try {
+        const result = await apiClient.importAllData(file);
+        setMessage({ text: result.message, type: 'success' });
+        setMessageType('success');
+      } catch (error) {
+        setMessage({ text: 'Import failed: ' + error.message, type: 'error' });
+        setMessageType('error');
+      } finally {
+        setImporting(false);
+        setTimeout(() => setMessage(null), 5000);
+      }
+      return;
+    }
+
+    // Cloud import: when no local file is chosen, import latest online backup
     setImporting(true);
     setMessage(null);
 
     try {
-      const result = await apiClient.importAllData(file);
+      const result = await apiClient.importAllDataFromCloud();
       setMessage({ text: result.message, type: 'success' });
       setMessageType('success');
+      queryClient.invalidateQueries();
+      setTimeout(() => window.location.reload(), 1000);
     } catch (error) {
-      setMessage({ text: 'Import failed: ' + error.message, type: 'error' });
+      setMessage({ text: 'Cloud import failed: ' + error.message, type: 'error' });
       setMessageType('error');
     } finally {
       setImporting(false);
@@ -252,172 +260,7 @@ export default function DataManagement() {
             )}
           </div>
 
-          <div className="p-4 border rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold">Cloud Sync (GitHub Repo File)</h3>
 
-              {syncStatus.isConfigured ? (
-                <Cloud className="w-4 h-4 text-green-500" />
-              ) : (
-                <CloudOff className="w-4 h-4 text-muted-foreground" />
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Sync your data across all browsers using GitHub Gist.
-              {syncStatus.isConfigured && (
-                <span className="block mt-1 text-xs">
-                  Last sync: {syncStatus.lastSync ? new Date(syncStatus.lastSync).toLocaleString() : 'Never'}
-                </span>
-              )}
-            </p>
-            {autoSync && syncStatus.isConfigured && (
-              <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-lg">
-                <RefreshCw className="w-4 h-4 text-primary animate-spin" />
-                <span className="text-xs font-medium text-primary">
-                  Next sync in: {countdown} seconds
-                </span>
-              </div>
-            )}
-
-            {!syncStatus.isConfigured ? (
-            <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="gist-token" className="text-xs text-muted-foreground">
-                    GitHub Personal Access Token
-                  </Label>
-                  <Input
-                    id="gist-token"
-                    type="password"
-                    placeholder="ghp_xxxxxxxxxxxx"
-                    value={gistToken}
-                    onChange={(e) => setGistToken(e.target.value)}
-                    className="bg-background/50 border-border/50 h-9 text-sm"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Create a token at: github.com/settings/tokens (enable repo scope for writing files)
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="repo-owner" className="text-xs text-muted-foreground">
-                      Repo Owner
-                    </Label>
-                    <Input
-                      id="repo-owner"
-                      value={repoOwner}
-                      onChange={(e) => setRepoOwner(e.target.value)}
-                      placeholder="myuser"
-                      className="bg-background/50 border-border/50 h-9 text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="repo-name" className="text-xs text-muted-foreground">
-                      Repo Name
-                    </Label>
-                    <Input
-                      id="repo-name"
-                      value={repoName}
-                      onChange={(e) => setRepoName(e.target.value)}
-                      placeholder="catalogue-maker"
-                      className="bg-background/50 border-border/50 h-9 text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="repo-branch" className="text-xs text-muted-foreground">
-                    Branch
-                  </Label>
-                  <Input
-                    id="repo-branch"
-                    value={branch}
-                    onChange={(e) => setBranch(e.target.value)}
-                    placeholder="master"
-                    className="bg-background/50 border-border/50 h-9 text-sm"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="repo-file" className="text-xs text-muted-foreground">
-                    File Path in Repo
-                  </Label>
-                  <Input
-                    id="repo-file"
-                    value={filePath}
-                    onChange={(e) => setFilePath(e.target.value)}
-                    placeholder="data/catalogue-data.json"
-                    className="bg-background/50 border-border/50 h-9 text-sm"
-                  />
-                </div>
-
-                <Button
-                  onClick={() => {
-                    localStorage.setItem('github_repo_owner', repoOwner);
-                    localStorage.setItem('github_repo_name', repoName);
-                    localStorage.setItem('github_branch', branch);
-                    localStorage.setItem('github_file_path', filePath);
-                    handleSyncToGist();
-                  }}
-                  disabled={syncing}
-                  className="w-full sm:w-auto"
-                >
-                  <Cloud className="w-4 h-4 mr-2" />
-                  {syncing ? 'Syncing...' : 'Enable Cloud Sync'}
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  After enabling, you can turn on auto-sync to automatically sync every 10 seconds
-                </p>
-              </div>
-
-            ) : (
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleSyncFromGist}
-                    disabled={syncing}
-                    variant="secondary"
-                    className="flex-1"
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    {syncing ? 'Syncing...' : 'Sync from Cloud'}
-                  </Button>
-                  <Button
-                    onClick={handleSyncToGist}
-                    disabled={syncing}
-                    variant="secondary"
-                    className="flex-1"
-                  >
-                    <Cloud className="w-4 h-4 mr-2" />
-                    {syncing ? 'Syncing...' : 'Sync to Cloud'}
-                  </Button>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <RefreshCw className="w-4 h-4 text-primary" />
-                    <Label htmlFor="auto-sync" className="text-sm font-medium cursor-pointer">
-                      Auto-sync every 10 seconds
-                    </Label>
-                  </div>
-                  <Switch
-                    id="auto-sync"
-                    checked={autoSync}
-                    onCheckedChange={handleAutoSyncToggle}
-                  />
-                </div>
-                
-                <Button
-                  onClick={handleClearSync}
-                  variant="ghost"
-                  size="sm"
-                  className="text-destructive hover:text-destructive"
-                >
-                  Disable Cloud Sync
-                </Button>
-              </div>
-            )}
-          </div>
         </div>
 
         <div className="p-4 bg-muted/50 rounded-lg">
