@@ -13,7 +13,6 @@ backend/catalogue.db
 
 # Build outputs
 dist/
-docs/
 
 # Logs
 *.log

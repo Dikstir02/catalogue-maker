@@ -11,6 +11,9 @@ export default defineConfig({
     },
   },
   base: '/catalogue-maker/',
+  build: {
+    outDir: 'docs',
+  },
   server: {
     proxy: {
       '/api': {
