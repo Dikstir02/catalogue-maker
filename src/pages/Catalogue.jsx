@@ -267,6 +267,8 @@ function CatalogueApp({ appUser, onLogout }) {
     { icon: <Image className="w-4 h-4" />, label: "Bulk Images", onClick: () => setShowBulkImage(true) },
     { icon: <FileUp className="w-4 h-4" />, label: "Update Stocks", onClick: () => setShowUpdateStocks(true) },
     { icon: <FileUp className="w-4 h-4" />, label: "Bulk Import", onClick: () => setShowBulkImport(true) },
+    // Non-admins: allow importing backed up JSON from dashboard
+    ...(!isAdmin ? [{ icon: <Download className="w-4 h-4" />, label: "Import Backup JSON", onClick: () => setShowBackupImport(true) }] : []),
   ];
 
   return (
@@ -357,18 +359,7 @@ function CatalogueApp({ appUser, onLogout }) {
                 </Button>
               )}
 
-              {/* Non-admins: external button to import backup JSON */}
-              {!isAdmin && (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => setShowBackupImport(true)}
-                  className="h-9 text-sm gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Import Backup
-                </Button>
-              )}
+              {/* Non-admins: import backup JSON is available under Utilities dropdown */}
 
               <Button size="sm" variant="ghost" onClick={() => setShowLogout(true)} className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground">
                 <LogOut className="w-4 h-4" />
