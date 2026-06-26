@@ -110,6 +110,7 @@ function CatalogueApp({ appUser, onLogout }) {
   const isAdmin = appUser.role === "admin";
   const isManager = appUser.role === "manager";
   const isExporter = appUser.role === "exporter";
+  const isUser = appUser.role === "user";
   const canManageProducts = isAdmin || isManager;
   const canExport = isAdmin || isManager || isExporter;
   const qc = useQueryClient();
@@ -270,6 +271,8 @@ function CatalogueApp({ appUser, onLogout }) {
     { icon: <Download className="w-4 h-4" />, label: "Sync Data", onClick: () => setShowBackupImport(true) },
   ];
 
+  const showUtilities = isAdmin || isManager;
+
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-background via-card to-background overflow-hidden">
       <div className="flex-shrink-0">
@@ -320,8 +323,17 @@ function CatalogueApp({ appUser, onLogout }) {
                 </>
               )}
 
-              {/* Utilities dropdown — includes Sync Data for all users */}
-              <DropdownBtn label="Utilities" icon={<Wrench className="w-4 h-4" />} items={utilitiesItems} />
+              {/* Utilities dropdown — Admin & Manager only */}
+              {showUtilities && (
+                <DropdownBtn label="Utilities" icon={<Wrench className="w-4 h-4" />} items={utilitiesItems} />
+              )}
+
+              {/* Sync Data button — Exporter only */}
+              {isExporter && (
+                <Button size="sm" variant="secondary" onClick={() => setShowBackupImport(true)} className="gap-2 bg-secondary/80 hover:bg-secondary border border-border/30 h-9 text-sm">
+                  <Download className="w-4 h-4" /> Sync Data
+                </Button>
+              )}
 
               {/* Add Product */}
               {canManageProducts && (
