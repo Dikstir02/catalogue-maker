@@ -145,14 +145,20 @@ export default function DataManagement() {
     return () => clearInterval(timer);
   }, [autoSync, syncStatus.isConfigured, syncStatus.lastSync]);
 
-  // Auto sync every 10 seconds
+  // Auto sync every 10 seconds (bidirectional)
   useEffect(() => {
     if (!autoSync || !syncStatus.isConfigured) return;
 
     const interval = setInterval(async () => {
       try {
-        // Sync from cloud first (to get latest changes)
-        await apiClient.syncFromGist(syncStatus.gistId, localStorage.getItem('gist_token'));
+        const token = localStorage.getItem('gist_token');
+        
+        // First, sync from cloud (pull latest changes) - skip confirmation for auto-sync
+        await apiClient.syncFromGist(syncStatus.gistId, token, true);
+        
+        // Then, sync to cloud (push local changes)
+        await apiClient.syncToGist(syncStatus.gistId, token);
+        
         localStorage.setItem('last_sync', new Date().toISOString());
         setSyncStatus(apiClient.getSyncStatus());
         setCountdown(10); // Reset countdown after sync

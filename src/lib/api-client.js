@@ -385,7 +385,7 @@ class ApiClient {
   }
 
   // Sync data from GitHub Gist
-  async syncFromGist(gistId, token) {
+  async syncFromGist(gistId, token, skipConfirmation = false) {
     const response = await fetch(`https://api.github.com/gists/${gistId}`, {
       headers: {
         'Authorization': `token ${token}`,
@@ -407,17 +407,19 @@ class ApiClient {
       throw new Error('Invalid data in Gist');
     }
 
-    // Confirm import
-    const confirmed = confirm(
-      `This will replace all your current data with data from the Gist.\n\n` +
-      `Products: ${data.products.length}\n` +
-      `Users: ${data.users?.length || 0}\n` +
-      `Last Sync: ${data.exportDate || 'Unknown'}\n\n` +
-      `Are you sure you want to continue?`
-    );
+    // Confirm import (skip for auto-sync)
+    if (!skipConfirmation) {
+      const confirmed = confirm(
+        `This will replace all your current data with data from the Gist.\n\n` +
+        `Products: ${data.products.length}\n` +
+        `Users: ${data.users?.length || 0}\n` +
+        `Last Sync: ${data.exportDate || 'Unknown'}\n\n` +
+        `Are you sure you want to continue?`
+      );
 
-    if (!confirmed) {
-      return { success: false, message: 'Sync cancelled' };
+      if (!confirmed) {
+        return { success: false, message: 'Sync cancelled' };
+      }
     }
 
     // Import data
