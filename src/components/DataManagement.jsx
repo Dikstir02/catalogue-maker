@@ -56,7 +56,10 @@ export default function DataManagement() {
   };
 
   const handleSyncToGist = async () => {
-    if (!gistToken) {
+    // Use stored token if input is empty
+    const tokenToUse = gistToken || localStorage.getItem('gist_token');
+    
+    if (!tokenToUse) {
       setMessage({ text: 'Please enter a GitHub Personal Access Token', type: 'error' });
       setMessageType('error');
       return;
@@ -66,7 +69,7 @@ export default function DataManagement() {
     setMessage(null);
 
     try {
-      const result = await apiClient.syncToGist(syncStatus.gistId || null, gistToken);
+      const result = await apiClient.syncToGist(syncStatus.gistId || null, tokenToUse);
       setMessage({ text: result.message, type: 'success' });
       setMessageType('success');
       setSyncStatus(apiClient.getSyncStatus());
