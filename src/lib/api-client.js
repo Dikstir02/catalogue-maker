@@ -303,43 +303,6 @@ class ApiClient {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }
 
-  // Export all data — uploads to Google Drive if configured, otherwise downloads locally
-  async exportAllData() {
-    const data = {
-      products: this.getProductsFromStorage(),
-      users: this.getUsersFromStorage(),
-      configs: this.getConfigsFromStorage(),
-      edit_logs: this.getEditLogsFromStorage(),
-      export_logs: this.getExportLogsFromStorage(),
-      exportDate: new Date().toISOString(),
-      version: '1.0'
-    };
-
-    // Check if Google Drive is configured
-    const driveAccessToken = localStorage.getItem('drive_access_token');
-    const driveFolderId = localStorage.getItem('drive_folder_id');
-
-    if (driveAccessToken && driveFolderId) {
-      // Upload to Google Drive
-      await this.uploadToGoogleDrive(data, driveAccessToken, driveFolderId);
-      localStorage.setItem('last_sync', new Date().toISOString());
-      return { success: true, message: 'Data exported successfully to Google Drive!' };
-    }
-
-    // Fallback: trigger file download
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `catalogue-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    return { success: true, message: 'Data exported successfully! Check your downloads.' };
-  }
-
   // Upload data to Google Drive
   async uploadToGoogleDrive(data, accessToken, folderId) {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
@@ -607,6 +570,135 @@ class ApiClient {
   // Check if auto sync is enabled
   isAutoSyncEnabled() {
     return localStorage.getItem('auto_sync_enabled') === 'true';
+  }
+
+  // List backup files in the Google Drive folder
+  async listDriveBackups(accessToken, folderId) {
+    const response = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType='application/json'&orderBy=createdTime+desc&fields=files(id,name,createdTime,webViewLink)`,
+      {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to list Drive files');
+    }
+
+    const result = await response.json();
+    return result.files || [];
+  }
+
+  // Download and import from a specific Google Drive file
+  async importFromDriveFile(fileId, accessToken) {
+    const response = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+      {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to download file from Drive');
+    }
+
+    const data = await response.json();
+
+    // Validate data structure
+    if (!data.products || !Array.isArray(data.products)) {
+      throw new Error('Invalid backup file: missing products data');
+    }
+
+    // Confirm import
+    const confirmed = confirm(
+      `This will replace all your current data with the imported data.\n\n` +
+      `Products: ${data.products.length}\n` +
+      `Users: ${data.users?.length || 0}\n` +
+      `Export Date: ${data.exportDate || 'Unknown'}\n\n` +
+      `Are you sure you want to continue?`
+    );
+
+    if (!confirmed) {
+      return { success: false, message: 'Import cancelled' };
+    }
+
+    // Import data
+    if (data.products) this.saveProductsToStorage(data.products);
+    if (data.users) this.saveUsersToStorage(data.users);
+    if (data.configs) this.saveConfigsToStorage(data.configs);
+    if (data.edit_logs) this.saveEditLogsToStorage(data.edit_logs);
+    if (data.export_logs) this.saveExportLogsToStorage(data.export_logs);
+
+    return {
+      success: true,
+      message: 'Data imported successfully from Google Drive! Please refresh the page.',
+      data: {
+        products: data.products.length,
+        users: data.users?.length || 0,
+        configs: data.configs?.length || 0
+      }
+    };
+  }
+
+  // Export data as local file download
+  async exportAllDataLocal() {
+    const data = {
+      products: this.getProductsFromStorage(),
+      users: this.getUsersFromStorage(),
+      configs: this.getConfigsFromStorage(),
+      edit_logs: this.getEditLogsFromStorage(),
+      export_logs: this.getExportLogsFromStorage(),
+      exportDate: new Date().toISOString(),
+      version: '1.0'
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `catalogue-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    return { success: true, message: 'Data exported successfully! Check your downloads.' };
+  }
+
+  // Export data to Google Drive
+  async exportAllDataToDrive() {
+    const driveAccessToken = localStorage.getItem('drive_access_token');
+    const driveFolderId = localStorage.getItem('drive_folder_id');
+
+    if (!driveAccessToken || !driveFolderId) {
+      throw new Error('Google Drive is not configured. Please sign in first.');
+    }
+
+    const data = {
+      products: this.getProductsFromStorage(),
+      users: this.getUsersFromStorage(),
+      configs: this.getConfigsFromStorage(),
+      edit_logs: this.getEditLogsFromStorage(),
+      export_logs: this.getExportLogsFromStorage(),
+      exportDate: new Date().toISOString(),
+      version: '1.0'
+    };
+
+    await this.uploadToGoogleDrive(data, driveAccessToken, driveFolderId);
+    localStorage.setItem('last_sync', new Date().toISOString());
+    return { success: true, message: 'Data exported successfully to Google Drive!' };
+  }
+
+  // Export all data — uploads to Google Drive if configured, otherwise downloads locally
+  async exportAllData() {
+    const driveAccessToken = localStorage.getItem('drive_access_token');
+    const driveFolderId = localStorage.getItem('drive_folder_id');
+
+    if (driveAccessToken && driveFolderId) {
+      return this.exportAllDataToDrive();
+    }
+
+    return this.exportAllDataLocal();
   }
 
   // Import data from JSON file

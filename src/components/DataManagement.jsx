@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, CheckCircle, AlertTriangle, Trash2 } from 'lucide-react';
+import { Download, Upload, Cloud, FileText, CheckCircle, AlertTriangle, Trash2 } from 'lucide-react';
 
 const CLIENT_ID = '471887550782-7khs7702s9tes4it48o1t7ftpgjaos29.apps.googleusercontent.com';
 const FOLDER_ID = '18LvVjQRUOdgPI_D34VK4-zOgT2pl2k51';
@@ -12,12 +12,16 @@ const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 export default function DataManagement() {
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [importingFromDrive, setImportingFromDrive] = useState(false);
+  const [loadingBackups, setLoadingBackups] = useState(false);
   const [message, setMessage] = useState(null);
   const [messageType, setMessageType] = useState(null);
 
   // Google Drive state
   const [driveConfigured, setDriveConfigured] = useState(false);
   const [lastSync, setLastSync] = useState(null);
+  const [backupFiles, setBackupFiles] = useState([]);
+  const [showBackups, setShowBackups] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -28,10 +32,15 @@ export default function DataManagement() {
     if (ls) setLastSync(ls);
   }, []);
 
+  const showMessage = (text, type) => {
+    setMessage({ text, type });
+    setMessageType(type);
+    setTimeout(() => setMessage(null), 5000);
+  };
+
   const handleGoogleSignIn = () => {
     if (typeof google === 'undefined' || !google.accounts) {
-      setMessage({ text: 'Google Identity Services failed to load. Please refresh the page.', type: 'error' });
-      setMessageType('error');
+      showMessage('Google Identity Services failed to load. Please refresh the page.', 'error');
       return;
     }
 
@@ -43,19 +52,13 @@ export default function DataManagement() {
           localStorage.setItem('drive_access_token', response.access_token);
           localStorage.setItem('drive_folder_id', FOLDER_ID);
           setDriveConfigured(true);
-          setMessage({ text: 'Google Drive connected successfully!', type: 'success' });
-          setMessageType('success');
-          setTimeout(() => setMessage(null), 5000);
+          showMessage('Google Drive connected successfully!', 'success');
         } else {
-          setMessage({ text: 'Google sign-in failed.', type: 'error' });
-          setMessageType('error');
-          setTimeout(() => setMessage(null), 5000);
+          showMessage('Google sign-in failed.', 'error');
         }
       },
       error_callback: (err) => {
-        setMessage({ text: 'Google sign-in error: ' + (err?.message || 'Unknown'), type: 'error' });
-        setMessageType('error');
-        setTimeout(() => setMessage(null), 5000);
+        showMessage('Google sign-in error: ' + (err?.message || 'Unknown'), 'error');
       }
     });
 
@@ -68,51 +71,83 @@ export default function DataManagement() {
     localStorage.removeItem('last_sync');
     setDriveConfigured(false);
     setLastSync(null);
-    setMessage({ text: 'Google Drive disconnected.', type: 'success' });
-    setMessageType('success');
-    setTimeout(() => setMessage(null), 5000);
+    setBackupFiles([]);
+    setShowBackups(false);
+    showMessage('Google Drive disconnected.', 'success');
   };
 
-  const handleExport = async () => {
+  const handleExportLocal = async () => {
     setExporting(true);
-    setMessage(null);
-
     try {
-      const result = await apiClient.exportAllData();
-      setMessage({ text: result.message, type: 'success' });
-      setMessageType('success');
-      const newLastSync = localStorage.getItem('last_sync');
-      if (newLastSync) setLastSync(newLastSync);
+      const result = await apiClient.exportAllDataLocal();
+      showMessage(result.message, 'success');
     } catch (error) {
-      setMessage({ text: 'Export failed: ' + error.message, type: 'error' });
-      setMessageType('error');
+      showMessage('Export failed: ' + error.message, 'error');
     } finally {
       setExporting(false);
-      setTimeout(() => setMessage(null), 5000);
     }
   };
 
-  const handleImport = async (e) => {
-    const file = e.target.files?.[0];
+  const handleExportDrive = async () => {
+    setExporting(true);
+    try {
+      const result = await apiClient.exportAllDataToDrive();
+      showMessage(result.message, 'success');
+      const newLastSync = localStorage.getItem('last_sync');
+      if (newLastSync) setLastSync(newLastSync);
+    } catch (error) {
+      showMessage('Export failed: ' + error.message, 'error');
+    } finally {
+      setExporting(false);
+    }
+  };
 
+  const handleImportFile = async (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
     setImporting(true);
-    setMessage(null);
-
     try {
       const result = await apiClient.importAllData(file);
-      setMessage({ text: result.message, type: 'success' });
-      setMessageType('success');
-
-      // Ensure other screens refresh their data.
+      showMessage(result.message, 'success');
       queryClient.invalidateQueries();
     } catch (error) {
-      setMessage({ text: 'Import failed: ' + error.message, type: 'error' });
-      setMessageType('error');
+      showMessage('Import failed: ' + error.message, 'error');
     } finally {
       setImporting(false);
-      setTimeout(() => setMessage(null), 5000);
+    }
+  };
+
+  const loadBackupFiles = async () => {
+    const token = localStorage.getItem('drive_access_token');
+    if (!token) return;
+
+    setLoadingBackups(true);
+    try {
+      const files = await apiClient.listDriveBackups(token, FOLDER_ID);
+      setBackupFiles(files);
+      setShowBackups(true);
+    } catch (error) {
+      showMessage('Failed to load backup list: ' + error.message, 'error');
+    } finally {
+      setLoadingBackups(false);
+    }
+  };
+
+  const handleImportFromDrive = async (fileId) => {
+    const token = localStorage.getItem('drive_access_token');
+    if (!token) return;
+
+    setImportingFromDrive(true);
+    try {
+      const result = await apiClient.importFromDriveFile(fileId, token);
+      showMessage(result.message, 'success');
+      queryClient.invalidateQueries();
+      setShowBackups(false);
+    } catch (error) {
+      showMessage('Import failed: ' + error.message, 'error');
+    } finally {
+      setImportingFromDrive(false);
     }
   };
 
@@ -121,7 +156,7 @@ export default function DataManagement() {
       <CardHeader>
         <CardTitle>Data Management</CardTitle>
         <CardDescription>
-          Export your data to backup or import data from another browser
+          Export or import your data using local files or Google Drive
         </CardDescription>
       </CardHeader>
 
@@ -143,13 +178,11 @@ export default function DataManagement() {
           </div>
         )}
 
-        {/* Google Drive Backup Section */}
+        {/* Google Drive Connection */}
         <div className="p-4 border rounded-lg">
           <h3 className="font-semibold mb-2 flex items-center gap-2">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L2 19h8l2-4 2 4h8L12 2zm0 4.5L18.5 17h-3.2L12 12.5 8.7 17H5.5L12 6.5z"/>
-            </svg>
-            Google Drive Backup
+            <Cloud className="w-4 h-4" />
+            Google Drive
           </h3>
 
           {lastSync && (
@@ -171,7 +204,7 @@ export default function DataManagement() {
           ) : (
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                Sign in with Google to automatically upload backups to your Google Drive folder.
+                Sign in with Google to enable Drive backups and imports.
               </p>
               <Button onClick={handleGoogleSignIn} className="gap-2">
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -186,60 +219,96 @@ export default function DataManagement() {
           )}
         </div>
 
-        <div className="space-y-4">
-          <div className="p-4 border rounded-lg">
-            <h3 className="font-semibold mb-2">Export Data</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {driveConfigured
-                ? 'Export all your data to Google Drive as a timestamped backup file.'
-                : 'Download all your data (products, users, configs, logs) as a JSON file.'}
-            </p>
-
-            <Button onClick={handleExport} disabled={exporting} className="w-full sm:w-auto">
-              <Download className="w-4 h-4 mr-2" />
-              {exporting ? 'Exporting...' : 'Export All Data'}
+        {/* Export Section */}
+        <div className="p-4 border rounded-lg">
+          <h3 className="font-semibold mb-3">Export Data</h3>
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={handleExportLocal} disabled={exporting} variant="outline" className="gap-2">
+              <Download className="w-4 h-4" />
+              {exporting ? 'Exporting...' : 'Download Locally'}
+            </Button>
+            <Button onClick={handleExportDrive} disabled={exporting || !driveConfigured} className="gap-2">
+              <Cloud className="w-4 h-4" />
+              {exporting ? 'Exporting...' : 'Upload to Drive'}
             </Button>
           </div>
+          {!driveConfigured && (
+            <p className="text-xs text-muted-foreground mt-2">Sign in to Google Drive above to enable Drive uploads.</p>
+          )}
+        </div>
 
-          <div className="p-4 border rounded-lg">
-            <h3 className="font-semibold mb-2">Import Data</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Import data from a previously exported JSON file.
-              <strong className="text-destructive"> This will replace all your current data!</strong>
-            </p>
+        {/* Import Section */}
+        <div className="p-4 border rounded-lg">
+          <h3 className="font-semibold mb-3">Import Data</h3>
+          <p className="text-sm text-muted-foreground mb-3">
+            <strong className="text-destructive">This will replace all your current data!</strong>
+          </p>
 
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="relative">
               <input
                 type="file"
                 accept=".json"
-                onChange={handleImport}
+                onChange={handleImportFile}
                 disabled={importing}
-                className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                id="file-import"
+                className="absolute inset-0 opacity-0 cursor-pointer"
               />
+              <Button disabled={importing} variant="outline" className="gap-2 pointer-events-none">
+                <FileText className="w-4 h-4" />
+                {importing ? 'Importing...' : 'Import from File'}
+              </Button>
             </div>
-
-            {importing && <p className="text-sm text-muted-foreground mt-2">Importing...</p>}
+            {driveConfigured && (
+              <Button
+                onClick={showBackups ? () => setShowBackups(false) : loadBackupFiles}
+                disabled={loadingBackups || importingFromDrive}
+                className="gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                {loadingBackups ? 'Loading...' : showBackups ? 'Hide Backups' : 'Import from Drive'}
+              </Button>
+            )}
           </div>
+
+          {/* Drive backup file list */}
+          {showBackups && backupFiles.length > 0 && (
+            <div className="mt-3 border rounded-lg divide-y max-h-60 overflow-y-auto">
+              {backupFiles.map((file) => (
+                <div key={file.id} className="flex items-center justify-between px-3 py-2 gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm truncate">{file.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {file.createdTime ? new Date(file.createdTime).toLocaleString() : ''}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => handleImportFromDrive(file.id)}
+                    disabled={importingFromDrive}
+                    className="flex-shrink-0 text-xs"
+                  >
+                    {importingFromDrive ? 'Importing...' : 'Import'}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+          {showBackups && backupFiles.length === 0 && !loadingBackups && (
+            <p className="text-sm text-muted-foreground mt-3">No backup files found in Drive.</p>
+          )}
         </div>
 
         <div className="p-4 bg-muted/50 rounded-lg">
           <h3 className="font-semibold mb-2 text-sm">How to use:</h3>
           <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-            <li>
-              <strong>Connect Google Drive:</strong> Click "Sign in with Google" to authorize the app
-            </li>
-            <li>
-              <strong>Export:</strong> Click "Export All Data" to upload a backup to your Google Drive folder
-            </li>
-            <li>
-              <strong>Transfer:</strong> Download the backup file from your Drive to another device
-            </li>
-            <li>
-              <strong>Import:</strong> Click "Import Data" and select the JSON file
-            </li>
-            <li>
-              <strong>Refresh:</strong> After import, refresh the page to see your data
-            </li>
+            <li><strong>Connect Google Drive</strong> (optional) to enable cloud backups</li>
+            <li><strong>Download Locally</strong> for a quick JSON file save</li>
+            <li><strong>Upload to Drive</strong> to save a timestamped backup to your Drive folder</li>
+            <li><strong>Import from File</strong> to restore from a local JSON file</li>
+            <li><strong>Import from Drive</strong> to select and restore from a Drive backup</li>
+            <li><strong>Refresh</strong> the page after import to see your restored data</li>
           </ol>
         </div>
       </CardContent>
