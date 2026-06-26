@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +18,7 @@ export default function DataManagement() {
   const [syncStatus, setSyncStatus] = useState(apiClient.getSyncStatus());
   const [autoSync, setAutoSync] = useState(apiClient.isAutoSyncEnabled());
   const [countdown, setCountdown] = useState(10);
+  const queryClient = useQueryClient();
 
   const handleExport = async () => {
     setExporting(true);
@@ -95,14 +97,22 @@ export default function DataManagement() {
 
     try {
       const result = await apiClient.syncFromGist(syncStatus.gistId, localStorage.getItem('gist_token'));
-      setMessage({ text: result.message, type: 'success' });
+      
+      // Invalidate all queries to refresh the UI
+      queryClient.invalidateQueries();
+      
+      setMessage({ text: result.message + ' Refreshing page...', type: 'success' });
       setMessageType('success');
+      
+      // Refresh page after 1 second to show synced data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       setMessage({ text: 'Sync failed: ' + error.message, type: 'error' });
       setMessageType('error');
     } finally {
       setSyncing(false);
-      setTimeout(() => setMessage(null), 5000);
     }
   };
 
@@ -158,6 +168,9 @@ export default function DataManagement() {
         
         // Then, sync to cloud (push local changes)
         await apiClient.syncToGist(syncStatus.gistId, token);
+        
+        // Invalidate all queries to refresh the UI with synced data
+        queryClient.invalidateQueries();
         
         localStorage.setItem('last_sync', new Date().toISOString());
         setSyncStatus(apiClient.getSyncStatus());
