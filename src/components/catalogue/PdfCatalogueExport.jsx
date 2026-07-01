@@ -144,42 +144,34 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
       doc.setFont("helvetica", "normal");
       doc.text(p.sku || "", x + 6, y + 10);
 
-      // Product name (bold)
-      const mainName = p.product_name || "";
-      doc.setFontSize(10);
-      doc.setTextColor(...theme.nameColor);
-      doc.setFont("helvetica", "bold");
-      const nameLines = doc.splitTextToSize(mainName, CELL_W - IMG_W - 12);
-      doc.text(nameLines.slice(0, 2), x + 6, y + 16);
-
-      // Sub-name (if exists, below name)
-      let textY = y + 22;
+      // Sub-name (main title, biggest and bold) - only sub-name, no product_name fallback
+      let textY = y + 18;
       if (p.sub_name) {
-        doc.setFontSize(8);
+        doc.setFontSize(11);
         doc.setTextColor(...theme.nameColor);
-        doc.setFont("helvetica", "normal");
+        doc.setFont("helvetica", "bold");
         const subLines = doc.splitTextToSize(p.sub_name, CELL_W - IMG_W - 12);
-        doc.text(subLines.slice(0, 1), x + 6, textY);
-        textY += 5;
+        doc.text(subLines.slice(0, 2), x + 6, textY);
+        textY += subLines.length > 1 ? 8 : 6;
       }
 
-      // Dimensions (if exists, one line below sub-name)
+      // Dimensions (single line below sub-name)
       if (p.dimensions) {
-        doc.setFontSize(7);
+        doc.setFontSize(8);
         doc.setTextColor(...theme.descColor);
         doc.setFont("helvetica", "normal");
         doc.text(p.dimensions, x + 6, textY);
         textY += 5;
       }
 
-      // Description (below dimensions/sub-name)
+      // Description (larger box, smaller font to fit more text)
       const descText = p.description || "";
       if (descText) {
-        doc.setFontSize(7);
+        doc.setFontSize(6.5);
         doc.setTextColor(...theme.descColor);
         doc.setFont("helvetica", "normal");
         const descLines = doc.splitTextToSize(descText, CELL_W - IMG_W - 12);
-        doc.text(descLines.slice(0, 2), x + 6, textY);
+        doc.text(descLines.slice(0, 4), x + 6, textY);
       }
 
       // Image on the right
