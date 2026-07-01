@@ -1,3 +1,4 @@
+import { db } from '@/lib/data-store';
 import React, { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
@@ -95,6 +96,13 @@ export default function DataManagement() {
       showMessage(result.message, 'success');
       const newLastSync = localStorage.getItem('last_sync');
       if (newLastSync) setLastSync(newLastSync);
+      // Log Google Drive export
+      await db.entities.ExportLog.create({
+        username: 'current_user',
+        exported_at: new Date().toISOString(),
+        product_count: 0,
+        columns: 'Google Drive Export',
+      });
     } catch (error) {
       showMessage('Export failed: ' + error.message, 'error');
     } finally {
@@ -144,6 +152,15 @@ export default function DataManagement() {
       showMessage(result.message, 'success');
       queryClient.invalidateQueries();
       setShowBackups(false);
+      // Log Google Drive import
+      await db.entities.EditLog.create({
+        username: 'current_user',
+        action: 'google_drive_import',
+        product_sku: '',
+        product_name: 'Full database import from Google Drive',
+        changes: JSON.stringify({ file_id: fileId, source: 'google_drive' }),
+        edited_at: new Date().toISOString(),
+      });
     } catch (error) {
       showMessage('Import failed: ' + error.message, 'error');
     } finally {

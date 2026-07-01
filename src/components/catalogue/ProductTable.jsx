@@ -49,7 +49,9 @@ export default function ProductTable({ products, onEdit, onDelete, isAdmin, sele
               <TableHead>
                 <SortHeader label="SKU" field="sku" sortField={sortField} sortDir={sortDir} onSort={onSort} />
               </TableHead>
-              <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider">Brand</TableHead>
+              <TableHead>
+                <SortHeader label="Brand" field="brand" sortField={sortField} sortDir={sortDir} onSort={onSort} />
+              </TableHead>
               <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider">Name</TableHead>
               <TableHead>
                 <SortHeader label="Category" field="category" sortField={sortField} sortDir={sortDir} onSort={onSort} />

@@ -27,6 +27,11 @@ export default function BulkImageUpdateModal({ open, onOpenChange, products, onU
     onOpenChange(false);
   };
 
+  const handleAddMore = () => {
+    setResult(null);
+    setText("");
+  };
+
   const handleApply = async () => {
     setLoading(true);
     setResult(null);
@@ -66,20 +71,9 @@ export default function BulkImageUpdateModal({ open, onOpenChange, products, onU
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-1">
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-sm text-muted-foreground">
-              Paste image URLs (one per line). The filename (without extension) will be matched against product SKUs.
-            </p>
-            <a
-              href="https://postimages.org/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 border border-primary/30 hover:border-primary/60 rounded-lg px-2.5 py-1.5 whitespace-nowrap transition-colors"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              PostImages
-            </a>
-          </div>
+          <p className="text-sm text-muted-foreground">
+            Paste image URLs (one per line). The filename (without extension) will be matched against product SKUs.
+          </p>
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -111,12 +105,22 @@ export default function BulkImageUpdateModal({ open, onOpenChange, products, onU
           )}
         </div>
         <DialogFooter className="gap-2">
-          <Button variant="secondary" onClick={handleClose} disabled={loading}>Close</Button>
-          {!result && (
-            <Button onClick={handleApply} disabled={loading || !text.trim()} className="gap-2 bg-primary hover:bg-primary/90">
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Image className="w-4 h-4" />}
-              Apply
-            </Button>
+          {result ? (
+            <>
+              <Button variant="secondary" onClick={handleClose}>Close</Button>
+              <Button onClick={handleAddMore} className="gap-2 bg-primary hover:bg-primary/90">
+                <Image className="w-4 h-4" />
+                Add More Images
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="secondary" onClick={handleClose} disabled={loading}>Close</Button>
+              <Button onClick={handleApply} disabled={loading || !text.trim()} className="gap-2 bg-primary hover:bg-primary/90">
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Image className="w-4 h-4" />}
+                Apply
+              </Button>
+            </>
           )}
         </DialogFooter>
       </DialogContent>

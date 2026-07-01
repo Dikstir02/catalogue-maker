@@ -57,7 +57,11 @@ function DropdownBtn({ label, icon, align = "left", items }) {
   useEffect(() => {
     if (!open || !btnRef.current) return;
     const r = btnRef.current.getBoundingClientRect();
-    setPos({ top: r.bottom + 4, left: r.left });
+    if (align === "right") {
+      setPos({ top: r.bottom + 4, left: undefined, right: window.innerWidth - r.right });
+    } else {
+      setPos({ top: r.bottom + 4, left: r.left, right: undefined });
+    }
     const close = (e) => {
       if (btnRef.current && !btnRef.current.contains(e.target)) {
         setOpen(false);
@@ -65,7 +69,7 @@ function DropdownBtn({ label, icon, align = "left", items }) {
     };
     document.addEventListener("click", close);
     return () => document.removeEventListener("click", close);
-  }, [open]);
+  }, [open, align]);
 
   return (
     <>
@@ -293,8 +297,6 @@ function CatalogueApp({ appUser, onLogout }) {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-
-              {/* Selected items actions */}
               {selectedIds.length > 0 && canExport && (
                 isAdmin ? (
                   <DropdownBtn
@@ -321,6 +323,11 @@ function CatalogueApp({ appUser, onLogout }) {
                     Delete {selectedIds.length}
                   </Button>
                 </>
+              )}
+
+              {/* Notification Bar — Admin & Manager only */}
+              {canManageProducts && (
+                <NotificationBar products={products} onOpenMissing={() => setShowMissing(true)} />
               )}
 
               {/* Utilities dropdown — Admin & Manager only */}
@@ -363,9 +370,14 @@ function CatalogueApp({ appUser, onLogout }) {
               )}
 
               {isAdmin && (
-                <Button size="sm" variant="ghost" onClick={() => setShowAdmin(true)} className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground">
-                  <Settings className="w-4 h-4" />
-                </Button>
+                <>
+                  <Button size="sm" variant="secondary" onClick={() => setShowBackupImport(true)} className="gap-2 bg-secondary/80 hover:bg-secondary border border-border/30 h-9 text-sm">
+                    <Download className="w-4 h-4" /> Sync Data
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setShowAdmin(true)} className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground">
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                </>
               )}
 
               {/* Non-admins: import backup JSON is available under Utilities dropdown */}
@@ -376,10 +388,6 @@ function CatalogueApp({ appUser, onLogout }) {
             </div>
           </div>
         </header>
-
-        {canManageProducts && (
-          <NotificationBar products={products} onOpenMissing={() => setShowMissing(true)} />
-        )}
 
         <div className="border-b border-border/20 bg-background/60 backdrop-blur-sm px-6 py-4">
           <div className="max-w-7xl mx-auto space-y-3">
@@ -449,19 +457,31 @@ function CatalogueApp({ appUser, onLogout }) {
               )}
             </AnimatePresence>
           )}
-          {isUser && !showTable && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="flex flex-col items-center justify-center py-20 text-center"
-            >
-              <Package className="w-16 h-16 text-muted-foreground/30 mb-4" />
-              <p className="text-lg text-muted-foreground mb-2">Browse the Catalogue</p>
-              <p className="text-sm text-muted-foreground/60 max-w-md">
-                Use the search bar and filters above to find products, then click <strong>Search</strong> to view results.
-              </p>
-            </motion.div>
+{isUser && !showTable && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="w-full max-w-md bg-background border border-border rounded-lg shadow-xl p-6 space-y-4">
+                <div className="flex flex-col items-center text-center">
+                  <div className="p-3 rounded-full bg-primary/10 mb-3">
+                    <Package className="w-8 h-8 text-primary" />
+                  </div>
+                  <h2 className="text-xl font-bold text-foreground">Welcome, {appUser.username}</h2>
+                  <p className="text-sm text-muted-foreground mt-1">You are logged in as a User</p>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-center text-muted-foreground">
+                    Browse products using the search and filters above, then click Search to view results.
+                  </p>
+                  <Button
+                    size="lg"
+                    onClick={() => setShowTable(true)}
+                    className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium h-11 text-base"
+                  >
+                    <Package className="w-5 h-5" />
+                    Start Browsing Products
+                  </Button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
