@@ -8,6 +8,9 @@ function getMissingReasons(product) {
   if (!product.brand) reasons.push("no brand");
   if (!product.category) reasons.push("no category");
   if (!product.product_name) reasons.push("no name");
+  if (!product.sub_name) reasons.push("no sub-name");
+  if (!product.dimensions) reasons.push("no dimensions");
+  if (!product.description) reasons.push("no description");
   return reasons;
 }
 

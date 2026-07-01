@@ -24,6 +24,9 @@ function FixProductModal({ product, open, onClose, onSaved, allBrands, allCatego
     brand: product?.brand || "",
     category: product?.category || "",
     product_name: product?.product_name || "",
+    sub_name: product?.sub_name || "",
+    dimensions: product?.dimensions || "",
+    description: product?.description || "",
     image_url: product?.image_url || "",
   });
   const [uploading, setUploading] = useState(false);
@@ -34,6 +37,9 @@ function FixProductModal({ product, open, onClose, onSaved, allBrands, allCatego
   const needsBrand = reasons.includes("No brand");
   const needsCategory = reasons.includes("No category");
   const needsName = reasons.includes("No name");
+  const needsSubName = reasons.includes("No sub-name");
+  const needsDimensions = reasons.includes("No dimensions");
+  const needsDescription = reasons.includes("No description");
 
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -51,6 +57,9 @@ function FixProductModal({ product, open, onClose, onSaved, allBrands, allCatego
     if (needsBrand && form.brand) updates.brand = form.brand;
     if (needsCategory && form.category) updates.category = form.category;
     if (needsName && form.product_name) updates.product_name = form.product_name;
+    if (needsSubName && form.sub_name) updates.sub_name = form.sub_name;
+    if (needsDimensions && form.dimensions) updates.dimensions = form.dimensions;
+    if (needsDescription && form.description) updates.description = form.description;
     await db.entities.Product.update(product.id, updates);
     setSaving(false);
     onSaved();
