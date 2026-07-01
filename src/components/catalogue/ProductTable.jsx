@@ -45,6 +45,7 @@ export default function ProductTable({ products, onEdit, onDelete, isAdmin, sele
                   onCheckedChange={(v) => onSelectAll(!!v)}
                 />
               </TableHead>
+              <TableHead className="w-10"></TableHead>
               <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider">Image</TableHead>
               <TableHead>
                 <SortHeader label="SKU" field="sku" sortField={sortField} sortDir={sortDir} onSort={onSort} />
