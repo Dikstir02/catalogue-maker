@@ -1,7 +1,7 @@
 import React from "react";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ImageOff, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { ImageOff, ArrowUp, ArrowDown, ArrowUpDown, CheckCircle2 } from "lucide-react";
 import ProductRow from "./ProductRow";
 
 function SortHeader({ label, field, sortField, sortDir, onSort }) {
@@ -45,7 +45,9 @@ export default function ProductTable({ products, onEdit, onDelete, isAdmin, sele
                   onCheckedChange={(v) => onSelectAll(!!v)}
                 />
               </TableHead>
-              <TableHead className="w-10"></TableHead>
+              <TableHead className="w-10 text-center">
+                <CheckCircle2 className="w-4 h-4 text-green-500 mx-auto" />
+              </TableHead>
               <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider">Image</TableHead>
               <TableHead>
                 <SortHeader label="SKU" field="sku" sortField={sortField} sortDir={sortDir} onSort={onSort} />

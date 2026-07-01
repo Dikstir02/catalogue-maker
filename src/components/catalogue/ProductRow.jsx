@@ -29,8 +29,14 @@ export default function ProductRow({ product, onEdit, onDelete, isAdmin, selecte
         />
       </TableCell>
       <TableCell className="py-3 w-10">
-        {isComplete && (
-          <CheckCircle2 className="w-4 h-4 text-green-500" />
+        {isComplete ? (
+          <div className="flex items-center justify-center">
+            <CheckCircle2 className="w-5 h-5 text-green-500" />
+          </div>
+        ) : (
+          <div className="flex items-center justify-center">
+            <div className="w-2 h-2 rounded-full bg-gray-300" />
+          </div>
         )}
       </TableCell>
       <TableCell className="py-3">
