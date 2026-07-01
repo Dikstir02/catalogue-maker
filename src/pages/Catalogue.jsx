@@ -24,7 +24,7 @@ import LogoutDialog from "@/components/catalogue/LogoutDialog";
 import PdfCatalogueExport from "@/components/catalogue/PdfCatalogueExport";
 import AppLogin from "@/pages/AppLogin";
 import { getAppUser, setAppUser, clearAppUser } from "@/lib/auth";
-import { Package, Download } from "lucide-react";
+import { Package, Cloud, Download } from "lucide-react";
 import ImportBackedUpDataDialog from "@/components/ImportBackedUpDataDialog";
 
 const DEFAULT_BRANDS = ["DUPONT", "ELIE BLEU", "LFL", "MORICI", "RECIFE", "SIGLO", "VINBRO", "XIKAR"];
@@ -373,7 +373,7 @@ function CatalogueApp({ appUser, onLogout }) {
               {isAdmin && (
                 <>
                   <Button size="sm" variant="ghost" onClick={() => setShowBackupImport(true)} className="h-9 w-9 p-0 text-muted-foreground hover:text-primary" title="Sync Data">
-                    <Download className="w-4 h-4" />
+                    <Cloud className="w-4 h-4" />
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => setShowAdmin(true)} className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground">
                     <Settings className="w-4 h-4" />

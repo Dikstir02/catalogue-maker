@@ -51,8 +51,10 @@ async function exportToExcel(products, selectedCols, filename, onProgress) {
   sheet.getRow(1).font = { bold: true };
   sheet.getRow(1).height = 20;
 
-  const ROW_HEIGHT = 80;
-  const IMG_COL_WIDTH = 15; // matches row height for ~1:1 cell ratio
+  // 1.38 inches = ~99.36 points (Excel row height in points)
+  // Column width: 1.38 inches ≈ 10 characters at default font
+  const ROW_HEIGHT = 99;
+  const IMG_COL_WIDTH = 10;
   const IMG_COL_INDEX = colDefs.findIndex((c) => c.key === "image");
   if (IMG_COL_INDEX >= 0) colDefs[IMG_COL_INDEX].width = IMG_COL_WIDTH;
 
