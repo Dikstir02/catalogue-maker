@@ -12,7 +12,7 @@ const DEFAULT_BRANDS = ["DUPONT", "ELIE BLEU", "LFL", "MORICI", "RECIFE", "SIGLO
 const DEFAULT_CATEGORIES = ["Ashtray", "Case", "Cutter", "Humidor", "Lighter", "Pen", "Others", "Set"];
 
 export default function EditProductModal({ product, open, onOpenChange, onSave, saving, currentUser, brands = DEFAULT_BRANDS, categories = DEFAULT_CATEGORIES }) {
-  const empty = { sku: "", brand: "", product_name: "", sub_name: "", description: "", category: "", image_url: "", stock: 0 };
+  const empty = { sku: "", brand: "", product_name: "", sub_name: "", description: "", category: "", image_url: "", stock: 0, dimensions: "" };
   const [form, setForm] = useState(empty);
   const [original, setOriginal] = useState(empty);
   const [uploading, setUploading] = useState(false);
@@ -28,6 +28,7 @@ export default function EditProductModal({ product, open, onOpenChange, onSave, 
         category: product.category || "",
         image_url: product.image_url || "",
         stock: product.stock || 0,
+        dimensions: product.dimensions || "",
       };
       setForm(snap);
       setOriginal(snap);
@@ -103,6 +104,10 @@ export default function EditProductModal({ product, open, onOpenChange, onSave, 
             <div className="space-y-1.5 col-span-2">
               <Label className="text-xs text-muted-foreground">Sub-name</Label>
               <Input value={form.sub_name} onChange={(e) => handleChange("sub_name", e.target.value)} placeholder="Variant name" className="bg-background/50 border-border/50 h-9 text-sm" />
+            </div>
+            <div className="space-y-1.5 col-span-2">
+              <Label className="text-xs text-muted-foreground">Dimensions</Label>
+                <Input value={form.dimensions} onChange={(e) => handleChange("dimensions", e.target.value)} placeholder='e.g. 8" x 5" x 2"' className="bg-background/50 border-border/50 h-9 text-sm" />
             </div>
             <div className="space-y-1.5 col-span-2">
               <Label className="text-xs text-muted-foreground">Description</Label>

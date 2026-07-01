@@ -144,35 +144,42 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
       doc.setFont("helvetica", "normal");
       doc.text(p.sku || "", x + 6, y + 10);
 
-      // Product name (bold) - use sub_name as main name if available
-      const mainName = p.sub_name || p.product_name || "";
+      // Product name (bold)
+      const mainName = p.product_name || "";
       doc.setFontSize(10);
       doc.setTextColor(...theme.nameColor);
       doc.setFont("helvetica", "bold");
       const nameLines = doc.splitTextToSize(mainName, CELL_W - IMG_W - 12);
-      doc.text(nameLines.slice(0, 2), x + 6, y + 18);
+      doc.text(nameLines.slice(0, 2), x + 6, y + 16);
 
-      // Description (subtext) - use description field
+      // Sub-name (if exists, below name)
+      let textY = y + 22;
+      if (p.sub_name) {
+        doc.setFontSize(8);
+        doc.setTextColor(...theme.nameColor);
+        doc.setFont("helvetica", "normal");
+        const subLines = doc.splitTextToSize(p.sub_name, CELL_W - IMG_W - 12);
+        doc.text(subLines.slice(0, 1), x + 6, textY);
+        textY += 5;
+      }
+
+      // Dimensions (if exists, one line below sub-name)
+      if (p.dimensions) {
+        doc.setFontSize(7);
+        doc.setTextColor(...theme.descColor);
+        doc.setFont("helvetica", "normal");
+        doc.text(p.dimensions, x + 6, textY);
+        textY += 5;
+      }
+
+      // Description (below dimensions/sub-name)
       const descText = p.description || "";
       if (descText) {
         doc.setFontSize(7);
         doc.setTextColor(...theme.descColor);
         doc.setFont("helvetica", "normal");
         const descLines = doc.splitTextToSize(descText, CELL_W - IMG_W - 12);
-        doc.text(descLines.slice(0, 2), x + 6, y + 25);
-      }
-
-      // Dimensions (if available)
-      const dims = [];
-      if (p.length) dims.push(`L: ${p.length}`);
-      if (p.width) dims.push(`W: ${p.width}`);
-      if (p.height) dims.push(`H: ${p.height}`);
-      const dimText = dims.length > 0 ? `Dimensions: ${dims.join(" x ")} mm` : "";
-      if (dimText) {
-        doc.setFontSize(6.5);
-        doc.setTextColor(...theme.descColor);
-        doc.setFont("helvetica", "normal");
-        doc.text(dimText, x + 6, y + descText ? 32 : 25);
+        doc.text(descLines.slice(0, 2), x + 6, textY);
       }
 
       // Image on the right
