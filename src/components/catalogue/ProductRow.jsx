@@ -2,7 +2,7 @@ import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Pencil, Trash2, ImageOff, CheckCircle2 } from "lucide-react";
+import { Pencil, Trash2, ImageOff } from "lucide-react";
 
 function isProductComplete(product) {
   return (
@@ -57,12 +57,11 @@ export default function ProductRow({ product, onEdit, onDelete, isAdmin, selecte
       <TableCell className="text-foreground font-medium text-sm">{product.brand}</TableCell>
       <TableCell className="text-foreground font-medium text-sm">
         <div className="flex items-center gap-2">
-          {product.product_name}
-          {isComplete ? (
-            <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-          ) : (
-            <div className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
-          )}
+          <span>{product.product_name}</span>
+          <span
+            className={`inline-flex h-2.5 w-2.5 rounded-full flex-shrink-0 ${isComplete ? "bg-green-500" : "bg-gray-300"}`}
+            title={isComplete ? "Complete item" : "Missing information"}
+          />
         </div>
       </TableCell>
       <TableCell className="text-muted-foreground text-sm">{product.category}</TableCell>
