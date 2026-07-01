@@ -9,11 +9,19 @@ function isProductComplete(product) {
     product.sku &&
     product.brand &&
     product.product_name &&
+    product.sub_name &&
+    product.description &&
     product.category &&
+    product.image_url &&
+    product.dimensions &&
     product.sku.trim() !== "" &&
     product.brand.trim() !== "" &&
     product.product_name.trim() !== "" &&
-    product.category.trim() !== ""
+    product.sub_name.trim() !== "" &&
+    product.description.trim() !== "" &&
+    product.category.trim() !== "" &&
+    product.image_url.trim() !== "" &&
+    product.dimensions.trim() !== ""
   );
 }
 
