@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ImageOff, AlertTriangle, Upload, X } from "lucide-react";
 
@@ -154,6 +155,42 @@ function FixProductModal({ product, open, onClose, onSaved, allBrands, allCatego
                 onChange={(e) => setForm((f) => ({ ...f, product_name: e.target.value }))}
                 placeholder="Enter product name..."
                 className="h-9 text-sm bg-secondary/40 border-border/30"
+              />
+            </div>
+          )}
+
+          {needsSubName && (
+            <div className="space-y-2">
+              <Label className="text-sm text-foreground">Sub-name</Label>
+              <Input
+                value={form.sub_name}
+                onChange={(e) => setForm((f) => ({ ...f, sub_name: e.target.value }))}
+                placeholder="Variant name"
+                className="h-9 text-sm bg-secondary/40 border-border/30"
+              />
+            </div>
+          )}
+
+          {needsDimensions && (
+            <div className="space-y-2">
+              <Label className="text-sm text-foreground">Dimensions</Label>
+              <Input
+                value={form.dimensions}
+                onChange={(e) => setForm((f) => ({ ...f, dimensions: e.target.value }))}
+                placeholder='e.g. 8" x 5" x 2"'
+                className="h-9 text-sm bg-secondary/40 border-border/30"
+              />
+            </div>
+          )}
+
+          {needsDescription && (
+            <div className="space-y-2">
+              <Label className="text-sm text-foreground">Description</Label>
+              <Textarea
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                placeholder="Product description text"
+                className="bg-secondary/40 border-border/50 min-h-[80px] text-sm resize-y"
               />
             </div>
           )}
