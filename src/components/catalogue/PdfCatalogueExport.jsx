@@ -70,7 +70,7 @@ async function loadImageAsDataUrl(url) {
     const img = new window.Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
-      const SIZE = 300;
+      const SIZE = 400;
       const scale = Math.min(SIZE / img.naturalWidth, SIZE / img.naturalHeight, 1);
       const w = img.naturalWidth * scale;
       const h = img.naturalHeight * scale;
@@ -171,7 +171,7 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
         doc.setTextColor(...theme.descColor);
         doc.setFont("helvetica", "normal");
         const descLines = doc.splitTextToSize(descText, CELL_W - IMG_W - 4);
-        doc.text(descLines.slice(0, 4), x + 6, textY);
+        doc.text(descLines.slice(0, 6), x + 6, textY);
       }
 
       // Image on the right
