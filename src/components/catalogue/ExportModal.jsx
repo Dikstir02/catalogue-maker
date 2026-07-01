@@ -89,8 +89,8 @@ async function exportToExcel(products, selectedCols, filename, onProgress) {
         ctx.clearRect(0, 0, SIZE, SIZE);
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
-        // Fit image inside square maintaining aspect ratio (contain)
-        const scale = Math.min(SIZE / img.naturalWidth, SIZE / img.naturalHeight, 1);
+        // Strict 1:1 square - crop to fill (cover) to prevent stretching
+        const scale = Math.max(SIZE / img.naturalWidth, SIZE / img.naturalHeight);
         const dw = img.naturalWidth * scale;
         const dh = img.naturalHeight * scale;
         const dx = (SIZE - dw) / 2;

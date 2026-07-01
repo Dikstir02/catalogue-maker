@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Image, Loader2, CheckCircle2, ExternalLink } from "lucide-react";
+import { Image, Loader2, CheckCircle2 } from "lucide-react";
 
 function extractSkuFromUrl(url) {
   try {
@@ -53,7 +53,10 @@ export default function BulkImageUpdateModal({ open, onOpenChange, products, onU
       }
       setProgress({ done: i + 1, total });
     }
-    onUpdated && onUpdated();
+    // Silently refresh product data without page redirect
+    if (onUpdated) {
+      onUpdated();
+    }
     setLoading(false);
     setResult({ matched, unmatched, total: lines.length });
     setProgress(null);

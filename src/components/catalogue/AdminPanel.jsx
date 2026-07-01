@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, UserPlus, Key, FileText, Trash2, ClipboardEdit, Tags, Plus, X, Database } from "lucide-react";
+import { Loader2, UserPlus, Key, FileText, Trash2, ClipboardEdit, Tags, Plus, X, Database, Cloud } from "lucide-react";
 import { format } from "date-fns";
 import DataManagement from "@/components/DataManagement";
 

@@ -58,9 +58,9 @@ function DropdownBtn({ label, icon, align = "left", items }) {
     if (!open || !btnRef.current) return;
     const r = btnRef.current.getBoundingClientRect();
     if (align === "right") {
-      setPos({ top: r.bottom + 4, left: undefined, right: window.innerWidth - r.right });
+      setPos({ top: r.bottom + 4, left: undefined });
     } else {
-      setPos({ top: r.bottom + 4, left: r.left, right: undefined });
+      setPos({ top: r.bottom + 4, left: r.left });
     }
     const close = (e) => {
       if (btnRef.current && !btnRef.current.contains(e.target)) {
@@ -86,8 +86,8 @@ function DropdownBtn({ label, icon, align = "left", items }) {
           style={{
             position: "fixed",
             top: pos.top,
-            left: align === "right" ? undefined : pos.left,
-            right: align === "right" ? 10 : undefined,
+            left: align === "right" ? "auto" : pos.left,
+            right: align === "right" ? 10 : "auto",
             zIndex: 99999,
             minWidth: 160,
           }}
@@ -325,14 +325,14 @@ function CatalogueApp({ appUser, onLogout }) {
                 </>
               )}
 
-              {/* Notification Bar — Admin & Manager only */}
-              {canManageProducts && (
-                <NotificationBar products={products} onOpenMissing={() => setShowMissing(true)} />
-              )}
-
               {/* Utilities dropdown — Admin & Manager only */}
               {showUtilities && (
                 <DropdownBtn label="Utilities" icon={<Wrench className="w-4 h-4" />} items={utilitiesItems} />
+              )}
+
+              {/* Notification Bar — Admin & Manager only (moved before utilities) */}
+              {canManageProducts && (
+                <NotificationBar products={products} onOpenMissing={() => setShowMissing(true)} />
               )}
 
               {/* Sync Data button — Exporter only */}
@@ -369,10 +369,11 @@ function CatalogueApp({ appUser, onLogout }) {
                 )
               )}
 
+              {/* Sync Data + Admin — Admin only */}
               {isAdmin && (
                 <>
-                  <Button size="sm" variant="secondary" onClick={() => setShowBackupImport(true)} className="gap-2 bg-secondary/80 hover:bg-secondary border border-border/30 h-9 text-sm">
-                    <Download className="w-4 h-4" /> Sync Data
+                  <Button size="sm" variant="ghost" onClick={() => setShowBackupImport(true)} className="h-9 w-9 p-0 text-muted-foreground hover:text-primary" title="Sync Data">
+                    <Download className="w-4 h-4" />
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => setShowAdmin(true)} className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground">
                     <Settings className="w-4 h-4" />
