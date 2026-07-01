@@ -2,9 +2,24 @@ import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Pencil, Trash2, ImageOff } from "lucide-react";
+import { Pencil, Trash2, ImageOff, CheckCircle2 } from "lucide-react";
+
+function isProductComplete(product) {
+  return (
+    product.sku &&
+    product.brand &&
+    product.product_name &&
+    product.category &&
+    product.sku.trim() !== "" &&
+    product.brand.trim() !== "" &&
+    product.product_name.trim() !== "" &&
+    product.category.trim() !== ""
+  );
+}
 
 export default function ProductRow({ product, onEdit, onDelete, isAdmin, selected, onSelect }) {
+  const isComplete = isProductComplete(product);
+
   return (
     <TableRow className="border-b border-border/20 hover:bg-primary/5 transition-colors">
       <TableCell className="py-3 w-10">
@@ -12,6 +27,11 @@ export default function ProductRow({ product, onEdit, onDelete, isAdmin, selecte
           checked={selected}
           onCheckedChange={(v) => onSelect(product.id, !!v)}
         />
+      </TableCell>
+      <TableCell className="py-3 w-10">
+        {isComplete && (
+          <CheckCircle2 className="w-4 h-4 text-green-500" />
+        )}
       </TableCell>
       <TableCell className="py-3">
         {product.image_url ? (
