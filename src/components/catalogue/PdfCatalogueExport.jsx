@@ -150,7 +150,7 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
         doc.setFontSize(11);
         doc.setTextColor(...theme.nameColor);
         doc.setFont("helvetica", "bold");
-        const subLines = doc.splitTextToSize(p.sub_name, CELL_W - IMG_W - 12);
+        const subLines = doc.splitTextToSize(p.sub_name, CELL_W - IMG_W - 4);
         doc.text(subLines.slice(0, 2), x + 6, textY);
         textY += subLines.length > 1 ? 8 : 6;
       }
@@ -170,7 +170,7 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
         doc.setFontSize(6.5);
         doc.setTextColor(...theme.descColor);
         doc.setFont("helvetica", "normal");
-        const descLines = doc.splitTextToSize(descText, CELL_W - IMG_W - 12);
+        const descLines = doc.splitTextToSize(descText, CELL_W - IMG_W - 4);
         doc.text(descLines.slice(0, 4), x + 6, textY);
       }
 
