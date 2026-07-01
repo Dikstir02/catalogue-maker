@@ -36,17 +36,6 @@ export default function ProductRow({ product, onEdit, onDelete, isAdmin, selecte
           onCheckedChange={(v) => onSelect(product.id, !!v)}
         />
       </TableCell>
-      <TableCell className="py-3 w-10">
-        {isComplete ? (
-          <div className="flex items-center justify-center">
-            <CheckCircle2 className="w-5 h-5 text-green-500" />
-          </div>
-        ) : (
-          <div className="flex items-center justify-center">
-            <div className="w-2 h-2 rounded-full bg-gray-300" />
-          </div>
-        )}
-      </TableCell>
       <TableCell className="py-3">
         {product.image_url ? (
           <a href={product.image_url} target="_blank" rel="noopener noreferrer">
@@ -66,7 +55,16 @@ export default function ProductRow({ product, onEdit, onDelete, isAdmin, selecte
       </TableCell>
       <TableCell className="text-foreground font-medium text-sm">{product.sku}</TableCell>
       <TableCell className="text-foreground font-medium text-sm">{product.brand}</TableCell>
-      <TableCell className="text-foreground font-medium text-sm">{product.product_name}</TableCell>
+      <TableCell className="text-foreground font-medium text-sm">
+        <div className="flex items-center gap-2">
+          {product.product_name}
+          {isComplete ? (
+            <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+          ) : (
+            <div className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
+          )}
+        </div>
+      </TableCell>
       <TableCell className="text-muted-foreground text-sm">{product.category}</TableCell>
       <TableCell className="text-foreground font-medium text-sm">{product.stock || 0}</TableCell>
       {isAdmin && (
