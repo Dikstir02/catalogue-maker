@@ -96,11 +96,11 @@ export default function EditProductModal({ product, open, onOpenChange, onSave, 
                 <SelectContent>{brands.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 col-span-2">
               <Label className="text-xs text-muted-foreground">Name</Label>
               <Input value={form.product_name} onChange={(e) => handleChange("product_name", e.target.value)} required className="bg-background/50 border-border/50 h-9 text-sm" />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 col-span-2">
               <Label className="text-xs text-muted-foreground">Sub-name</Label>
               <Input value={form.sub_name} onChange={(e) => handleChange("sub_name", e.target.value)} placeholder="Variant name" className="bg-background/50 border-border/50 h-9 text-sm" />
             </div>

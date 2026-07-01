@@ -73,42 +73,50 @@ async function exportToExcel(products, selectedCols, filename, onProgress) {
     row.alignment = { vertical: "middle" };
 
     onProgress && onProgress(i + 1);
-    if (selectedCols.image && p.image_url && IMG_COL_INDEX >= 0) {
-      try {
-        // Fetch and compress image via canvas (force 1:1 square)
-        const img = new window.Image();
-        img.crossOrigin = "anonymous";
-        await new Promise((res) => {
-          img.onload = res;
-          img.onerror = res;
-          img.src = p.image_url;
-        });
-        const SIZE = 200;
-        const canvas = document.createElement("canvas");
-        canvas.width = SIZE;
-        canvas.height = SIZE;
-        const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, SIZE, SIZE);
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
-        // Strict 1:1 square - crop to fill (cover) to prevent stretching
-        const scale = Math.max(SIZE / img.naturalWidth, SIZE / img.naturalHeight);
-        const dw = img.naturalWidth * scale;
-        const dh = img.naturalHeight * scale;
-        const dx = (SIZE - dw) / 2;
-        const dy = (SIZE - dh) / 2;
-        ctx.drawImage(img, dx, dy, dw, dh);
-        // Use PNG to preserve transparency
-        const base64 = canvas.toDataURL("image/png").split(",")[1];
-        const imageId = workbook.addImage({ base64, extension: "png" });
-        const padding = 4;
-        sheet.addImage(imageId, {
-          tl: { nativeCol: IMG_COL_INDEX, nativeColOff: padding * 9144, nativeRow: rowIndex - 1, nativeRowOff: padding * 9144 },
-          br: { nativeCol: IMG_COL_INDEX + 1, nativeColOff: -padding * 9144, nativeRow: rowIndex, nativeRowOff: -padding * 9144 },
-          editAs: "oneCell",
-        });
-      } catch {
-        // skip
+    if (selectedCols.image && IMG_COL_INDEX >= 0) {
+      if (p.image_url) {
+        try {
+          // Fetch and compress image via canvas (force 1:1 square)
+          const img = new window.Image();
+          img.crossOrigin = "anonymous";
+          await new Promise((res) => {
+            img.onload = res;
+            img.onerror = res;
+            img.src = p.image_url;
+          });
+          const SIZE = 200;
+          const canvas = document.createElement("canvas");
+          canvas.width = SIZE;
+          canvas.height = SIZE;
+          const ctx = canvas.getContext("2d");
+          ctx.clearRect(0, 0, SIZE, SIZE);
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          // Strict 1:1 square - crop to fill (cover) to prevent stretching
+          const scale = Math.max(SIZE / img.naturalWidth, SIZE / img.naturalHeight);
+          const dw = img.naturalWidth * scale;
+          const dh = img.naturalHeight * scale;
+          const dx = (SIZE - dw) / 2;
+          const dy = (SIZE - dh) / 2;
+          ctx.drawImage(img, dx, dy, dw, dh);
+          // Use PNG to preserve transparency
+          const base64 = canvas.toDataURL("image/png").split(",")[1];
+          const imageId = workbook.addImage({ base64, extension: "png" });
+          const padding = 4;
+          sheet.addImage(imageId, {
+            tl: { nativeCol: IMG_COL_INDEX, nativeColOff: padding * 9144, nativeRow: rowIndex - 1, nativeRowOff: padding * 9144 },
+            br: { nativeCol: IMG_COL_INDEX + 1, nativeColOff: -padding * 9144, nativeRow: rowIndex, nativeRowOff: -padding * 9144 },
+            editAs: "oneCell",
+          });
+        } catch {
+          row.getCell(IMG_COL_INDEX + 1).value = "NO IMAGE";
+          row.getCell(IMG_COL_INDEX + 1).alignment = { vertical: "middle", horizontal: "center" };
+          row.getCell(IMG_COL_INDEX + 1).font = { italic: true, color: { argb: "FF9CA3AF" } };
+        }
+      } else {
+        row.getCell(IMG_COL_INDEX + 1).value = "NO IMAGE";
+        row.getCell(IMG_COL_INDEX + 1).alignment = { vertical: "middle", horizontal: "center" };
+        row.getCell(IMG_COL_INDEX + 1).font = { italic: true, color: { argb: "FF9CA3AF" } };
       }
     }
   }
