@@ -2,6 +2,7 @@ import { db } from '@/lib/data-store'
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -70,7 +71,7 @@ export default function EditProductModal({ product, open, onOpenChange, onSave, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-card border-border/30 max-w-md">
+      <DialogContent className="bg-card border-border/30 max-w-xl">
         <DialogHeader>
           <div className="flex items-center justify-between pr-6">
             <DialogTitle className="text-foreground">Edit Product</DialogTitle>
@@ -103,9 +104,9 @@ export default function EditProductModal({ product, open, onOpenChange, onSave, 
               <Label className="text-xs text-muted-foreground">Sub-name</Label>
               <Input value={form.sub_name} onChange={(e) => handleChange("sub_name", e.target.value)} placeholder="Variant name" className="bg-background/50 border-border/50 h-9 text-sm" />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 col-span-2">
               <Label className="text-xs text-muted-foreground">Description</Label>
-              <Input value={form.description} onChange={(e) => handleChange("description", e.target.value)} placeholder="Product description text" className="bg-background/50 border-border/50 h-9 text-sm" />
+              <Textarea value={form.description} onChange={(e) => handleChange("description", e.target.value)} placeholder="Product description text" className="bg-background/50 border-border/50 min-h-[80px] text-sm resize-y" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Category</Label>
