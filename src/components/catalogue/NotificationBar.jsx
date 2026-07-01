@@ -14,6 +14,7 @@ function getMissingReasons(product) {
 export default function NotificationBar({ products, onOpenMissing }) {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const btnRef = useRef(null);
+  const popoverRef = useRef(null);
   const [pos, setPos] = useState({ top: 0, left: 0 });
 
   const noImage = products.filter((p) => !p.image_url);
@@ -27,8 +28,15 @@ export default function NotificationBar({ products, onOpenMissing }) {
     if (!popoverOpen || !btnRef.current) return;
     const r = btnRef.current.getBoundingClientRect();
     setPos({ top: r.bottom + 4, left: r.left });
+  }, [popoverOpen]);
+
+  useEffect(() => {
+    if (!popoverOpen) return;
     const handler = (e) => {
-      if (btnRef.current && !btnRef.current.contains(e.target)) {
+      // Close if click is outside both the button and the popover
+      const isOutsideBtn = btnRef.current && !btnRef.current.contains(e.target);
+      const isOutsidePopover = popoverRef.current && !popoverRef.current.contains(e.target);
+      if (isOutsideBtn && isOutsidePopover) {
         setPopoverOpen(false);
       }
     };
@@ -54,6 +62,7 @@ export default function NotificationBar({ products, onOpenMissing }) {
 
       {popoverOpen && ReactDOM.createPortal(
         <div
+          ref={popoverRef}
           style={{
             position: "fixed",
             top: pos.top,
