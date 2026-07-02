@@ -173,9 +173,9 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
             const num = parseFloat(p);
             return isNaN(num) ? p : (num / 25.4).toFixed(2);
           });
-          dimText = 'Dimensions: ' + inches.join(' x ') + '"';
+          dimText = inches.join(' x ') + '"';
         } else {
-          dimText = 'Dimensions: ' + (parts[0] || p.dimensions);
+          dimText = parts[0] || p.dimensions;
         }
         doc.text(dimText, x + 6, textY);
         textY += 5;
