@@ -158,25 +158,14 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
         textY += subLines.length > 1 ? 10 : 8;
       }
 
-      // Dimensions (single line below sub-name) - auto-convert mm to inches
+      // Dimensions (single line below sub-name) - use raw data with normalized spacing
       if (p.dimensions) {
         doc.setFontSize(7);
         doc.setTextColor(...theme.descColor);
         doc.setFont("helvetica", "normal");
-        // Normalize "×" to "x", strip "Dimensions:" label if present, then split by "x" (case-insensitive, with optional spaces), trim, filter
+        // Normalize "×" to "x", strip "Dimensions:" label if present, then add spaces around "x"
         const normalized = String(p.dimensions).replace(/×/g, 'x').replace(/^Dimensions:\s*/i, '');
-        const parts = normalized.split(/\s*x\s*/i).map(s => s.trim()).filter(Boolean);
-        let dimText;
-        if (parts.length > 1) {
-          // Convert each numeric part from mm to inches
-          const inches = parts.map(p => {
-            const num = parseFloat(p);
-            return isNaN(num) ? p : (num / 25.4).toFixed(2);
-          });
-          dimText = inches.join(' x ') + '"';
-        } else {
-          dimText = parts[0] || p.dimensions;
-        }
+        const dimText = normalized.replace(/\s*x\s*/gi, ' x ');
         doc.text(dimText, x + 6, textY);
         textY += 5;
       }
