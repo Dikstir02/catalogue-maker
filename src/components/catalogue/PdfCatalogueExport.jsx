@@ -173,7 +173,7 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
             const num = parseFloat(p);
             return isNaN(num) ? p : (num / 25.4).toFixed(2);
           });
-          dimText = 'Dimensions: ' + inches.join('x') + '"';
+          dimText = 'Dimensions: ' + inches.join(' x ') + '"';
         } else {
           dimText = 'Dimensions: ' + (parts[0] || p.dimensions);
         }
