@@ -88,9 +88,14 @@ export default function AppLogin({ onLogin }) {
 
           <div className="rounded-lg border border-dashed border-border/50 bg-background/40 p-3 space-y-2">
             <p className="text-xs text-muted-foreground">Restore catalogue data from a backup JSON file.</p>
-            <label className="inline-flex">
-              <input type="file" accept=".json" onChange={handleImportFile} className="hidden" />
-              <Button type="button" variant="outline" size="sm" disabled={importing} className="gap-2">
+            <label className="relative inline-flex cursor-pointer">
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImportFile}
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              />
+              <Button type="button" variant="outline" size="sm" disabled={importing} className="gap-2 pointer-events-none">
                 {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                 {importing ? "Importing..." : "Import JSON"}
               </Button>
