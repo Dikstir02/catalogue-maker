@@ -163,8 +163,9 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
         doc.setFontSize(7);
         doc.setTextColor(...theme.descColor);
         doc.setFont("helvetica", "normal");
-        // Split by "x" (case-insensitive, with optional spaces), trim, filter
-        const parts = String(p.dimensions).split(/\s*x\s*/i).map(s => s.trim()).filter(Boolean);
+        // Normalize "×" to "x", then split by "x" (case-insensitive, with optional spaces), trim, filter
+        const normalized = String(p.dimensions).replace(/×/g, 'x');
+        const parts = normalized.split(/\s*x\s*/i).map(s => s.trim()).filter(Boolean);
         let dimText;
         if (parts.length > 1) {
           // Convert each numeric part from mm to inches
@@ -174,7 +175,7 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
           });
           dimText = 'Dimensions: ' + inches.join('x') + '"';
         } else {
-          dimText = 'Dimensions: ' + parts[0] || p.dimensions;
+          dimText = 'Dimensions: ' + (parts[0] || p.dimensions);
         }
         doc.text(dimText, x + 6, textY);
         textY += 5;
