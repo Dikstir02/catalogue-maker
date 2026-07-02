@@ -1,5 +1,5 @@
 import { db } from '@/lib/data-store'
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 
 import { apiClient } from '@/lib/api-client';
 import { setAppUser } from "@/lib/auth";
@@ -15,6 +15,7 @@ export default function AppLogin({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importMessage, setImportMessage] = useState(null);
+  const fileInputRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,6 +49,10 @@ export default function AppLogin({ onLogin }) {
       setImporting(false);
       e.target.value = "";
     }
+  };
+
+  const openFilePicker = () => {
+    fileInputRef.current?.click();
   };
 
   return (
@@ -88,18 +93,19 @@ export default function AppLogin({ onLogin }) {
 
           <div className="rounded-lg border border-dashed border-border/50 bg-background/40 p-3 space-y-2">
             <p className="text-xs text-muted-foreground">Restore catalogue data from a backup JSON file.</p>
-            <label className="relative inline-flex cursor-pointer">
+            <div className="inline-flex">
               <input
+                ref={fileInputRef}
                 type="file"
                 accept=".json"
                 onChange={handleImportFile}
-                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                className="hidden"
               />
-              <Button type="button" variant="outline" size="sm" disabled={importing} className="gap-2 pointer-events-none">
+              <Button type="button" variant="outline" size="sm" disabled={importing} className="gap-2" onClick={openFilePicker}>
                 {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                 {importing ? "Importing..." : "Import JSON"}
               </Button>
-            </label>
+            </div>
             {importMessage && (
               <p className={`flex items-center gap-1.5 text-xs ${importMessage.type === "success" ? "text-emerald-600" : "text-destructive"}`}>
                 {importMessage.type === "success" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
