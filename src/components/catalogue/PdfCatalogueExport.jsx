@@ -160,7 +160,7 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
 
       // Dimensions (single line below sub-name) - formatted as "Dimensions: 48.4x64.5x52.3mm"
       if (p.dimensions) {
-        doc.setFontSize(8);
+        doc.setFontSize(7);
         doc.setTextColor(...theme.descColor);
         doc.setFont("helvetica", "normal");
         // Split by "x" (case-insensitive, with optional spaces), trim, and rejoin without spaces
