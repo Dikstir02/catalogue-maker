@@ -163,8 +163,8 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
         doc.setFontSize(7);
         doc.setTextColor(...theme.descColor);
         doc.setFont("helvetica", "normal");
-        // Normalize "×" to "x", then split by "x" (case-insensitive, with optional spaces), trim, filter
-        const normalized = String(p.dimensions).replace(/×/g, 'x');
+        // Normalize "×" to "x", strip "Dimensions:" label if present, then split by "x" (case-insensitive, with optional spaces), trim, filter
+        const normalized = String(p.dimensions).replace(/×/g, 'x').replace(/^Dimensions:\s*/i, '');
         const parts = normalized.split(/\s*x\s*/i).map(s => s.trim()).filter(Boolean);
         let dimText;
         if (parts.length > 1) {
