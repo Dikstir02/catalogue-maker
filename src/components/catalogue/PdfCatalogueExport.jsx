@@ -155,15 +155,15 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
         textY += subLines.length > 1 ? 10 : 8;
       }
 
-      // Dimensions (single line below sub-name) - formatted as "Dimensions: 48.4 x 64.5 x 52.3 mm"
+      // Dimensions (single line below sub-name) - formatted as "Dimensions: 48.4x64.5x52.3mm"
       if (p.dimensions) {
         doc.setFontSize(8);
         doc.setTextColor(...theme.descColor);
         doc.setFont("helvetica", "normal");
-        // Split by "x" (case-insensitive, with optional spaces), trim, and rejoin
+        // Split by "x" (case-insensitive, with optional spaces), trim, and rejoin without spaces
         const parts = String(p.dimensions).split(/\s*x\s*/i).map(s => s.trim()).filter(Boolean);
         const dimText = parts.length > 1
-          ? 'Dimensions: ' + parts.join(' x ') + ' mm'
+          ? 'Dimensions: ' + parts.join('x') + 'mm'
           : 'Dimensions: ' + p.dimensions;
         doc.text(dimText, x + 6, textY);
         textY += 5;
