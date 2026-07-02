@@ -1,17 +1,20 @@
 import { db } from '@/lib/data-store'
 import React, { useState } from "react";
 
+import { apiClient } from '@/lib/api-client';
 import { setAppUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Package, Loader2 } from "lucide-react";
+import { Package, Loader2, Upload, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function AppLogin({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importMessage, setImportMessage] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,6 +30,23 @@ export default function AppLogin({ onLogin }) {
       onLogin({ id: match.id, username: match.username, role: match.role });
     } else {
       setError("Invalid username or password.");
+    }
+  };
+
+  const handleImportFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    setImportMessage(null);
+    try {
+      const result = await apiClient.importAllData(file);
+      setImportMessage({ type: "success", text: result.message });
+    } catch (error) {
+      setImportMessage({ type: "error", text: error.message || "Import failed." });
+    } finally {
+      setImporting(false);
+      e.target.value = "";
     }
   };
 
@@ -65,6 +85,23 @@ export default function AppLogin({ onLogin }) {
           <Button type="submit" disabled={loading} className="w-full h-10 bg-primary hover:bg-primary/90 font-medium">
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
           </Button>
+
+          <div className="rounded-lg border border-dashed border-border/50 bg-background/40 p-3 space-y-2">
+            <p className="text-xs text-muted-foreground">Restore catalogue data from a backup JSON file.</p>
+            <label className="inline-flex">
+              <input type="file" accept=".json" onChange={handleImportFile} className="hidden" />
+              <Button type="button" variant="outline" size="sm" disabled={importing} className="gap-2">
+                {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                {importing ? "Importing..." : "Import JSON"}
+              </Button>
+            </label>
+            {importMessage && (
+              <p className={`flex items-center gap-1.5 text-xs ${importMessage.type === "success" ? "text-emerald-600" : "text-destructive"}`}>
+                {importMessage.type === "success" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
+                {importMessage.text}
+              </p>
+            )}
+          </div>
         </form>
         <p className="text-center text-xs text-muted-foreground/50 mt-6 italic">by Dexter John Modesto</p>
       </div>

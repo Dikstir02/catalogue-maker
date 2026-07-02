@@ -11,6 +11,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, UserPlus, Key, FileText, Trash2, ClipboardEdit, Tags, Plus, X, Database, Cloud } from "lucide-react";
 import { format } from "date-fns";
 import DataManagement from "@/components/DataManagement";
+import ConfirmDeleteDialog from "@/components/catalogue/ConfirmDeleteDialog";
 
 const ROLE_OPTIONS = [
   { value: "admin", label: "Admin", desc: "Full access" },
@@ -63,6 +64,7 @@ function UserManager() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
   const [msg, setMsg] = useState("");
+  const [pendingDeleteUser, setPendingDeleteUser] = useState(null);
 
   const { data: users = [] } = useQuery({
     queryKey: ["appusers"],
@@ -84,6 +86,7 @@ function UserManager() {
     if (uname.toLowerCase() === "dexter") return;
     await db.entities.AppUser.delete(id);
     qc.invalidateQueries({ queryKey: ["appusers"] });
+    setPendingDeleteUser(null);
   };
 
   const changeRole = async (id, uname, newRole) => {
@@ -148,7 +151,7 @@ function UserManager() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button size="icon" variant="ghost" onClick={() => deleteUser(u.id, u.username)} className="h-7 w-7 text-destructive/60 hover:text-destructive flex-shrink-0">
+                  <Button size="icon" variant="ghost" onClick={() => setPendingDeleteUser(u)} className="h-7 w-7 text-destructive/60 hover:text-destructive flex-shrink-0">
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 </div>
@@ -165,6 +168,13 @@ function UserManager() {
           ))}
         </div>
       </div>
+      <ConfirmDeleteDialog
+        open={Boolean(pendingDeleteUser)}
+        onOpenChange={(open) => !open && setPendingDeleteUser(null)}
+        title="Delete user"
+        description={`Delete user ${pendingDeleteUser?.username || "this account"}? This action cannot be undone.`}
+        onConfirm={() => pendingDeleteUser && deleteUser(pendingDeleteUser.id, pendingDeleteUser.username)}
+      />
     </div>
   );
 }
@@ -203,6 +213,7 @@ function CatalogueManager() {
 function TagEditor({ label, items, onSave }) {
   const [list, setList] = useState(null);
   const [newVal, setNewVal] = useState("");
+  const [pendingRemoval, setPendingRemoval] = useState(null);
   const current = list !== null ? list : items;
 
   const add = () => {
@@ -212,7 +223,10 @@ function TagEditor({ label, items, onSave }) {
     setNewVal("");
   };
 
-  const remove = (item) => setList(current.filter((i) => i !== item));
+  const remove = (item) => {
+    setList(current.filter((i) => i !== item));
+    setPendingRemoval(null);
+  };
 
   const isDirty = list !== null && JSON.stringify(list) !== JSON.stringify(items);
 
@@ -223,7 +237,7 @@ function TagEditor({ label, items, onSave }) {
         {current.map((item) => (
           <span key={item} className="flex items-center gap-1 text-xs bg-secondary/80 border border-border/30 rounded-full px-2.5 py-1 text-foreground">
             {item}
-            <button onClick={() => remove(item)} className="text-muted-foreground hover:text-destructive transition-colors ml-0.5">
+            <button onClick={() => setPendingRemoval(item)} className="text-muted-foreground hover:text-destructive transition-colors ml-0.5">
               <X className="w-3 h-3" />
             </button>
           </span>
@@ -246,6 +260,13 @@ function TagEditor({ label, items, onSave }) {
           Save {label}
         </Button>
       )}
+      <ConfirmDeleteDialog
+        open={Boolean(pendingRemoval)}
+        onOpenChange={(open) => !open && setPendingRemoval(null)}
+        title={`Remove ${label.slice(0, -1)}`}
+        description={`Remove ${pendingRemoval || label.toLowerCase()} from ${label.toLowerCase()}?`}
+        onConfirm={() => pendingRemoval && remove(pendingRemoval)}
+      />
     </div>
   );
 }

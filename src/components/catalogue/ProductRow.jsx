@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Pencil, Trash2, ImageOff } from "lucide-react";
+import ConfirmDeleteDialog from "@/components/catalogue/ConfirmDeleteDialog";
 
 function isProductComplete(product) {
   return (
@@ -27,6 +28,7 @@ function isProductComplete(product) {
 
 export default function ProductRow({ product, onEdit, onDelete, isAdmin, selected, onSelect }) {
   const isComplete = isProductComplete(product);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   return (
     <TableRow className="border-b border-border/20 hover:bg-primary/5 transition-colors">
@@ -72,12 +74,19 @@ export default function ProductRow({ product, onEdit, onDelete, isAdmin, selecte
             <Button size="icon" variant="ghost" onClick={() => onEdit(product)} className="h-8 w-8 text-foreground hover:text-primary">
               <Pencil className="w-4 h-4" />
             </Button>
-            <Button size="icon" variant="ghost" onClick={() => onDelete(product.id)} className="h-8 w-8 text-destructive/60 hover:text-destructive">
+            <Button size="icon" variant="ghost" onClick={() => setShowDeleteConfirm(true)} className="h-8 w-8 text-destructive/60 hover:text-destructive">
               <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         </TableCell>
       )}
+      <ConfirmDeleteDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Delete product"
+        description={`Delete ${product.product_name || "this product"}? This action cannot be undone.`}
+        onConfirm={() => onDelete(product.id)}
+      />
     </TableRow>
   );
 }
