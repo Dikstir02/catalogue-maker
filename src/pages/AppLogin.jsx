@@ -1,17 +1,25 @@
 import { db } from '@/lib/data-store'
 import React, { useState } from "react";
+import { apiClient } from '@/lib/api-client';
 
 import { setAppUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Package, Loader2 } from "lucide-react";
+import { Package, Loader2, FileText, CheckCircle, AlertTriangle, Upload } from "lucide-react";
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function AppLogin({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [importing, setImporting] = useState(false);
+  const [importMessage, setImportMessage] = useState({ type: '', text: '' });
+  const [showImport, setShowImport] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,6 +36,25 @@ export default function AppLogin({ onLogin }) {
     } else {
       setError("Invalid username or password.");
     }
+  };
+
+  const handleImportFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    setImportMessage({ type: '', text: '' });
+    try {
+      const result = await apiClient.importAllData(file);
+      setImportMessage({ type: 'success', text: result.message });
+      queryClient.invalidateQueries();
+    } catch (error) {
+      setImportMessage({ type: 'error', text: 'Import failed: ' + error.message });
+    } finally {
+      setImporting(false);
+    }
+    // Reset file input so same file can be re-imported
+    e.target.value = '';
   };
 
   return (
@@ -66,6 +93,76 @@ export default function AppLogin({ onLogin }) {
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
           </Button>
         </form>
+
+        {/* Import Data divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border/30" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-gradient-to-br from-background via-card to-background px-2 text-muted-foreground/50">or</span>
+          </div>
+        </div>
+
+        {/* Import Data toggle */}
+        <button
+          onClick={() => setShowImport(!showImport)}
+          className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors py-1 flex items-center justify-center gap-1.5"
+        >
+          <Upload className="w-3.5 h-3.5" />
+          {showImport ? 'Hide Import' : 'Restore Data from Backup'}
+        </button>
+
+        {showImport && (
+          <div className="mt-3 bg-card/60 backdrop-blur-md border border-border/30 rounded-xl p-4 space-y-3">
+            <p className="text-xs text-muted-foreground">
+              <strong className="text-destructive">This will replace all your current data!</strong>
+            </p>
+
+            {/* Import message */}
+            {importMessage && (
+              <div
+                className={`p-3 rounded-lg flex items-start gap-2 ${
+                  importMessage.type === 'success'
+                    ? 'bg-green-50 dark:bg-green-950/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800'
+                    : importMessage.type === 'error'
+                    ? 'bg-red-50 dark:bg-red-950/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'
+                    : 'hidden'
+                }`}
+              >
+                {importMessage.type === 'success' ? (
+                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                ) : importMessage.type === 'error' ? (
+                  <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                ) : null}
+                {importMessage.text && <p className="text-xs">{importMessage.text}</p>}
+              </div>
+            )}
+
+            {/* File picker - same as DataManagement.jsx */}
+            <div className="relative">
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImportFile}
+                disabled={importing}
+                id="login-file-import"
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+              <Button disabled={importing} variant="outline" className="w-full gap-2 pointer-events-none">
+                <FileText className="w-4 h-4" />
+                {importing ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Importing...
+                  </span>
+                ) : (
+                  'Import from File'
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+
         <p className="text-center text-xs text-muted-foreground/50 mt-6 italic">by Dexter John Modesto</p>
       </div>
     </div>
