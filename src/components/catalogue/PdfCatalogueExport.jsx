@@ -138,6 +138,9 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
       doc.setLineWidth(0.3);
       doc.roundedRect(x + 2, y + 2, CELL_W - 4, CELL_H - 4, 3, 3, "S");
 
+      // Set tight character spacing for all text on this card
+      doc.setCharSpace(0);
+
       // SKU (top-left small label)
       doc.setFontSize(7);
       doc.setTextColor(...theme.skuColor);
@@ -197,6 +200,7 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
     }
 
     // Footer
+    doc.setCharSpace(0);
     doc.setFillColor(...theme.footerBg);
     doc.rect(0, PAGE_H - FOOTER_H, PAGE_W, FOOTER_H, "F");
     doc.setDrawColor(...theme.footerLine);
@@ -208,6 +212,7 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
     doc.text("LA CASA DEL HABANO  |  BAQER MOHEBI ENTERPRISES", MARGIN, PAGE_H - 5, { align: "left" });
 
     // Page number
+    doc.setCharSpace(0);
     doc.setFontSize(7);
     doc.setTextColor(...theme.pageNumColor);
     doc.setFont("helvetica", "normal");
