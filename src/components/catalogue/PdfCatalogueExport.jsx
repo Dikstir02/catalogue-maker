@@ -152,7 +152,7 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
         doc.setFont("helvetica", "bold");
         const subLines = doc.splitTextToSize(p.sub_name, CELL_W - IMG_W - 4);
         doc.text(subLines.slice(0, 2), x + 6, textY);
-        textY += subLines.length > 1 ? 8 : 6;
+        textY += subLines.length > 1 ? 14 : 12;
       }
 
       // Dimensions (single line below sub-name)
@@ -200,13 +200,13 @@ async function generatePdfCatalogue(products, filename, themeKey, onProgress) {
     doc.setFontSize(8);
     doc.setTextColor(...theme.footerText);
     doc.setFont("helvetica", "bold");
-    doc.text("LA CASA DEL HABANO  |  BAQER MOHEBI ENTERPRISES", PAGE_W / 2, PAGE_H - 5, { align: "center" });
+    doc.text("LA CASA DEL HABANO  |  BAQER MOHEBI ENTERPRISES", MARGIN, PAGE_H - 5, { align: "left" });
 
     // Page number
     doc.setFontSize(7);
     doc.setTextColor(...theme.pageNumColor);
     doc.setFont("helvetica", "normal");
-    doc.text(`${pageIdx + 1} / ${pages.length}`, PAGE_W - MARGIN, PAGE_H - 5, { align: "right" });
+    doc.text(`${pageIdx + 1} / ${pages.length}`, MARGIN + 100, PAGE_H - 5, { align: "left" });
   }
 
   doc.save(`${sanitizeFilename(filename)}.pdf`);
