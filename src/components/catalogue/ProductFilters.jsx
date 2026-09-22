@@ -1,9 +1,31 @@
 import React from "react";
-import { Search } from "lucide-react";
+import { Search, CheckCircle, Circle, Package } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import MultiSelectFilter from "./MultiSelectFilter";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-export default function ProductFilters({ search, onSearchChange, categories, onCategoriesChange, brands, onBrandsChange, allBrands, allCategories }) {
+export default function ProductFilters({
+  search,
+  onSearchChange,
+  categories,
+  onCategoriesChange,
+  brands,
+  onBrandsChange,
+  allBrands,
+  allCategories,
+  infoFilter,
+  onInfoFilterChange,
+  excludeZeroStock,
+  onExcludeZeroStockChange,
+}) {
   return (
     <div className="space-y-3">
       <div className="relative">
@@ -29,6 +51,28 @@ export default function ProductFilters({ search, onSearchChange, categories, onC
           selected={categories}
           onChange={onCategoriesChange}
         />
+        <Select
+          value={infoFilter}
+          onValueChange={onInfoFilterChange}
+        >
+          <SelectTrigger className="bg-background/50 border-border/50 text-foreground h-11 w-[160px]">
+            <SelectValue placeholder="Info Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Info Status</SelectItem>
+            <SelectItem value="complete">Complete Only</SelectItem>
+            <SelectItem value="incomplete">Incomplete Only</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex items-center space-x-2 bg-background/50 border border-border/50 rounded-lg px-3 py-2 h-11">
+          <Package className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Exclude 0 stock</span>
+          <Switch
+            checked={excludeZeroStock}
+            onCheckedChange={onExcludeZeroStockChange}
+            className="ml-auto"
+          />
+        </div>
       </div>
     </div>
   );

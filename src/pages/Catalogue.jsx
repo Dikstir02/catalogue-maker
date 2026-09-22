@@ -142,6 +142,8 @@ function CatalogueApp({ appUser, onLogout }) {
   const [selectedIds, setSelectedIds] = useState([]);
   const [sortField, setSortField] = useState("");
   const [sortDir, setSortDir] = useState("asc");
+  const [infoFilter, setInfoFilter] = useState("all"); // "all", "complete", "incomplete"
+  const [excludeZeroStock, setExcludeZeroStock] = useState(false);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["products"],
@@ -205,6 +207,34 @@ function CatalogueApp({ appUser, onLogout }) {
         return matchCat && matchBrand;
       });
     }
+    // Filter by info completeness
+    if (infoFilter === "complete") {
+      list = list.filter((p) => {
+        const complete = (
+          p.sku && p.brand && p.product_name && p.sub_name && p.description &&
+          p.category && p.image_url && p.dimensions &&
+          p.sku.trim() !== "" && p.brand.trim() !== "" && p.product_name.trim() !== "" &&
+          p.sub_name.trim() !== "" && p.description.trim() !== "" &&
+          p.category.trim() !== "" && p.image_url.trim() !== "" && p.dimensions.trim() !== ""
+        );
+        return complete;
+      });
+    } else if (infoFilter === "incomplete") {
+      list = list.filter((p) => {
+        const complete = (
+          p.sku && p.brand && p.product_name && p.sub_name && p.description &&
+          p.category && p.image_url && p.dimensions &&
+          p.sku.trim() !== "" && p.brand.trim() !== "" && p.product_name.trim() !== "" &&
+          p.sub_name.trim() !== "" && p.description.trim() !== "" &&
+          p.category.trim() !== "" && p.image_url.trim() !== "" && p.dimensions.trim() !== ""
+        );
+        return !complete;
+      });
+    }
+    // Filter by stock (exclude zero stock)
+    if (excludeZeroStock) {
+      list = list.filter((p) => (p.stock || 0) > 0);
+    }
     if (sortField) {
       list = [...list].sort((a, b) => {
         let av = a[sortField] ?? "";
@@ -217,7 +247,7 @@ function CatalogueApp({ appUser, onLogout }) {
       });
     }
     return list;
-  }, [products, search, selectedCategories, selectedBrands, sortField, sortDir]);
+  }, [products, search, selectedCategories, selectedBrands, sortField, sortDir, infoFilter, excludeZeroStock]);
 
   const handleSelect = (id, checked) => {
     setSelectedIds((prev) => checked ? [...prev, id] : prev.filter((x) => x !== id));
@@ -403,6 +433,10 @@ function CatalogueApp({ appUser, onLogout }) {
                   onBrandsChange={setSelectedBrands}
                   allBrands={allBrands}
                   allCategories={allCategories}
+                  infoFilter={infoFilter}
+                  onInfoFilterChange={setInfoFilter}
+                  excludeZeroStock={excludeZeroStock}
+                  onExcludeZeroStockChange={setExcludeZeroStock}
                 />
               </div>
               {isUser && (
