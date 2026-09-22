@@ -10,7 +10,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  base: '/catalogue-maker/',
+  base: './',  // Use relative paths for GitHub Pages
   build: {
     outDir: 'docs',
   },
