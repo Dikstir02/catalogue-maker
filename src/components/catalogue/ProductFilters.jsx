@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, CheckCircle, Circle, Package } from "lucide-react";
+import { Search, CheckCircle, Circle, Package, Image, ImageOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -25,6 +25,8 @@ export default function ProductFilters({
   onInfoFilterChange,
   excludeZeroStock,
   onExcludeZeroStockChange,
+  imageFilter,
+  onImageFilterChange,
 }) {
   return (
     <div className="space-y-3">
@@ -62,6 +64,19 @@ export default function ProductFilters({
             <SelectItem value="all">All Info Status</SelectItem>
             <SelectItem value="complete">Complete Only</SelectItem>
             <SelectItem value="incomplete">Incomplete Only</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          value={imageFilter}
+          onValueChange={onImageFilterChange}
+        >
+          <SelectTrigger className="bg-background/50 border-border/50 text-foreground h-11 w-[150px]">
+            <SelectValue placeholder="Image" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Images</SelectItem>
+            <SelectItem value="with">With Image</SelectItem>
+            <SelectItem value="without">Without Image</SelectItem>
           </SelectContent>
         </Select>
         <div className="flex items-center space-x-2 bg-background/50 border border-border/50 rounded-lg px-3 py-2 h-11">

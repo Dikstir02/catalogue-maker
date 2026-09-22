@@ -144,6 +144,7 @@ function CatalogueApp({ appUser, onLogout }) {
   const [sortDir, setSortDir] = useState("asc");
   const [infoFilter, setInfoFilter] = useState("all"); // "all", "complete", "incomplete"
   const [excludeZeroStock, setExcludeZeroStock] = useState(false);
+  const [imageFilter, setImageFilter] = useState("all"); // "all", "with", "without"
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["products"],
@@ -235,6 +236,12 @@ function CatalogueApp({ appUser, onLogout }) {
     if (excludeZeroStock) {
       list = list.filter((p) => (p.stock || 0) > 0);
     }
+    // Filter by image presence
+    if (imageFilter === "with") {
+      list = list.filter((p) => p.image_url && p.image_url.trim() !== "");
+    } else if (imageFilter === "without") {
+      list = list.filter((p) => !p.image_url || p.image_url.trim() === "");
+    }
     if (sortField) {
       list = [...list].sort((a, b) => {
         let av = a[sortField] ?? "";
@@ -247,7 +254,7 @@ function CatalogueApp({ appUser, onLogout }) {
       });
     }
     return list;
-  }, [products, search, selectedCategories, selectedBrands, sortField, sortDir, infoFilter, excludeZeroStock]);
+  }, [products, search, selectedCategories, selectedBrands, sortField, sortDir, infoFilter, excludeZeroStock, imageFilter]);
 
   const handleSelect = (id, checked) => {
     setSelectedIds((prev) => checked ? [...prev, id] : prev.filter((x) => x !== id));
@@ -386,7 +393,6 @@ function CatalogueApp({ appUser, onLogout }) {
                   <DropdownBtn
                     label="Export"
                     icon={<FileSpreadsheet className="w-4 h-4" />}
-                    align="right"
                     items={[
                       { icon: <FileSpreadsheet className="w-4 h-4" />, label: "Excel", onClick: () => setShowExport(true) },
                       { icon: <FileText className="w-4 h-4" />, label: "PDF", onClick: () => setShowPdfExport(true) },
@@ -437,6 +443,8 @@ function CatalogueApp({ appUser, onLogout }) {
                   onInfoFilterChange={setInfoFilter}
                   excludeZeroStock={excludeZeroStock}
                   onExcludeZeroStockChange={setExcludeZeroStock}
+                  imageFilter={imageFilter}
+                  onImageFilterChange={setImageFilter}
                 />
               </div>
               {isUser && (
