@@ -34,6 +34,10 @@
       "type": "number",
       "default": 0,
       "description": "Stock quantity"
+    },
+    "stock_updated_date": {
+      "type": "string",
+      "description": "ISO timestamp of when the stock quantity last changed (set automatically, shown as a tooltip on the stock number)"
     }
   },
   "required": [

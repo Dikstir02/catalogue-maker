@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Pencil, Trash2, ImageOff } from "lucide-react";
+import { format } from "date-fns";
 import ConfirmDeleteDialog from "@/components/catalogue/ConfirmDeleteDialog";
 
 function isProductComplete(product) {
@@ -24,6 +26,23 @@ function isProductComplete(product) {
     product.image_url.trim() !== "" &&
     product.dimensions.trim() !== ""
   );
+}
+
+function formatTimestamp(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return null;
+  return format(date, "MMM d, yyyy HH:mm");
+}
+
+// Tooltip text for the stock number: prefers the dedicated stock timestamp and
+// falls back to the record update time for products saved before it existed.
+function getStockUpdatedLabel(product) {
+  const stockStamp = formatTimestamp(product.stock_updated_date);
+  if (stockStamp) return `Stock last updated: ${stockStamp}`;
+  const recordStamp = formatTimestamp(product.updated_date);
+  if (recordStamp) return `Last updated: ${recordStamp}`;
+  return "No update history";
 }
 
 export default function ProductRow({ product, onEdit, onDelete, isAdmin, selected, onSelect }) {
@@ -67,7 +86,16 @@ export default function ProductRow({ product, onEdit, onDelete, isAdmin, selecte
         </div>
       </TableCell>
       <TableCell className="text-muted-foreground text-sm">{product.category}</TableCell>
-      <TableCell className="text-foreground font-medium text-sm">{product.stock || 0}</TableCell>
+      <TableCell className="text-foreground font-medium text-sm">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-4 transition-colors hover:decoration-primary">
+              {product.stock || 0}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>{getStockUpdatedLabel(product)}</TooltipContent>
+        </Tooltip>
+      </TableCell>
       {isAdmin && (
         <TableCell>
           <div className="flex gap-1">

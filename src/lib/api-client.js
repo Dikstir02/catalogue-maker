@@ -110,11 +110,15 @@ class ApiClient {
   async createProduct(product) {
     await this.delay();
     const products = this.getProductsFromStorage();
+    const timestamp = new Date().toISOString();
+    const hasStock = product.stock !== undefined && product.stock !== null && product.stock !== "";
     const newProduct = {
       ...product,
       id: this.generateId(),
-      created_date: new Date().toISOString(),
-      updated_date: new Date().toISOString()
+      created_date: timestamp,
+      updated_date: timestamp,
+      // Stamp the stock timestamp on creation when a stock value is supplied
+      ...(hasStock ? { stock_updated_date: timestamp } : {})
     };
     products.push(newProduct);
     this.saveProductsToStorage(products);
@@ -130,11 +134,20 @@ class ApiClient {
       throw new Error('Product not found');
     }
 
+    // The stock timestamp only moves when the stock number actually changes
+    const stockChanged =
+      product.stock !== undefined &&
+      product.stock !== null &&
+      product.stock !== "" &&
+      Number(product.stock) !== Number(products[index].stock ?? 0);
+    const timestamp = new Date().toISOString();
+
     products[index] = {
       ...products[index],
       ...product,
       id,
-      updated_date: new Date().toISOString()
+      updated_date: timestamp,
+      ...(stockChanged ? { stock_updated_date: timestamp } : {})
     };
     this.saveProductsToStorage(products);
     return products[index];
